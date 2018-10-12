@@ -1,0 +1,47 @@
+spring:
+  #数据库配置
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://192.168.1.104:3306/school?characterEncoding=utf-8&useSSL=true
+    username: root
+    password: Lnwh_2018
+    filtes: stat, slf4j
+  #jpa配置
+  jpa:
+      hibernate:
+        ddl-auto: update
+      show-sql: true
+      # 命名策略
+      # Naming strategy
+      naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
+      database: mysql
+  thymeleaf:
+    cache: false
+  resources:
+    static-locations: classpath:static/, file:static/
+  artemis:
+    embedded:
+      persistent: true
+#  cache:
+#    ehcache:
+#      config: classpath:/shiro-ehcache.xml
+  redis:
+    jedis:
+      pool:
+        min-idle: 0
+        max-idle: 8
+        max-wait: -1ms
+        max-active: 8
+    host: 127.0.0.1
+    port: 6379
+  mvc:
+    static-path-pattern: /images/
+  servlet:
+    multipart:
+      max-file-size: "10MB"
+      max-request-size: "100MB"
+server:
+  port: 8080
+  tomcat:
+    uri-encoding: UTF-8
+    max-http-post-size: -1
