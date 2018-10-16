@@ -109,11 +109,13 @@ public class NoticeController extends NettyServerHandler {
     public Object addNotice(Notice notice, HttpServletRequest request) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         notice.setNoticeTime(sdf.format(new Timestamp(System.currentTimeMillis())));
-        try {
-            String json = new Gson().toJson(ImgUtils.filesToImg((MultipartHttpServletRequest) request));
-            notice.setNoticePhoto(json);
-        } catch (Exception e) {
-            return new JsonObjectResult(ResultCode.EXCEPTION, e.getMessage());
+        if (request instanceof MultipartHttpServletRequest) {
+            try {
+                String json = new Gson().toJson(ImgUtils.filesToImg((MultipartHttpServletRequest) request, "images\\notice"));
+                notice.setNoticePhoto(json);
+            } catch (Exception e) {
+                return new JsonObjectResult(ResultCode.EXCEPTION, e.getMessage());
+            }
         }
         try {
             Map<String, Object> datas = new HashMap<>();

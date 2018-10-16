@@ -12,12 +12,15 @@ import com.school.management.api.repository.TeacherInfoRepository;
 import com.school.management.api.repository.TeacherJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
+import com.school.management.api.utils.ImgUtils;
 import org.omg.CORBA.OBJ_ADAPTER;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
@@ -84,6 +87,7 @@ public class TeacherController {
                     }
                     data.put("awardPhotos", awardPhotos);
                     data.put("teacherName", teacher.getTeacherName());
+                    data.put("teacherPhoto", teacher.getHeadPhoto());
                 }
                 return new JsonObjectResult(ResultCode.SUCCESS, "", data);
             }
@@ -107,15 +111,20 @@ public class TeacherController {
     }
 
     @PostMapping("/add")
-    public Object add(Teacher teacher) {
-        TeacherInfo info = teacher.getTeacherInfo();
-        teacher.setTeacherInfo(null);
-//        teacher.setCourseName(teacher.getCourse());
-        teacher.setCourse(teacher.getCourse());
-        teacher = jpa.saveAndFlush(teacher);
-        info.setTeacherId(teacher.getTeacherId());
-        teacher.setTeacherInfo(infoJpa.saveAndFlush(info));
-        return new JsonObjectResult(ResultCode.SUCCESS, "添加成功");
+    public Object add(Teacher teacher, HttpServletRequest request) {
+        try {
+            TeacherInfo info = teacher.getTeacherInfo();
+            teacher.setTeacherInfo(null);
+            teacher.setCourse(teacher.getCourse());
+            teacher.setHeadPhoto(ImgUtils.base64ToImg(teacher.getHeadPhoto(), UUID.randomUUID().toString()+".jpg", teacher.getTeacherName()));
+            teacher = jpa.saveAndFlush(teacher);
+            info.setTeacherId(teacher.getTeacherId());
+            teacher.setTeacherInfo(infoJpa.saveAndFlush(info));
+            return new JsonObjectResult(ResultCode.SUCCESS, "添加成功");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new JsonObjectResult(ResultCode.PARAMS_ERROR, "添加失败");
+        }
     }
 
     @PostMapping("/update")

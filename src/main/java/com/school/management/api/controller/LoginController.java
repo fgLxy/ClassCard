@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -72,6 +74,7 @@ public class LoginController {
             map.put("perName", ((Permission) session.getAttribute("permission")).getPerName());
             map.put("perId", ((Permission) session.getAttribute("permission")).getPerId());
             map.put("sessionId", session.getId());
+            map.put("headUrl", session.getAttribute("headUrl"));
             if (session.getAttribute("teacher") != null || session.getAttribute("principal") != null) {
                 if (((Permission) (session.getAttribute("permission"))).getPerId() == 1) {
                     map.put("principal", session.getAttribute("principal"));
@@ -235,8 +238,21 @@ public class LoginController {
         return new JsonObjectResult(ResultCode.PARAMS_ERROR, "验证码输入错误， 请核对验证码是否正确，或者验证码已过期。");
     }
 
-    @GetMapping("/")
+    @GetMapping("/hello")
+    @ResponseBody
     public Object hello() {
+//        E:\ClassManagement\ClassManagementSystemProject\out\production\classes
+//        E:\ClassManagement\ClassManagementSystemProject\out\production\classes
+//        E:\ClassManagement\ClassManagementSystemProject\out\production\classes\static\image\comment\photo_005.jpg
+        try {
+            System.out.println();
+            System.out.println(ResourceUtils.getFile("classpath:").getPath());
+            System.out.println();
+            System.out.println(ResourceUtils.getURL("classpath:static/"));
+            System.out.println();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         return "hello";
     }
 }

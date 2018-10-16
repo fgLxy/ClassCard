@@ -15,19 +15,24 @@ import org.springframework.web.servlet.DispatcherServlet;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableCaching
-public class ApiApplication  implements CommandLineRunner {
+//@EnableCaching
+public class ApiApplication extends SpringBootServletInitializer implements CommandLineRunner {
 
     public static void main(String[] args) {
         SpringApplication.run(ApiApplication.class, args);
     }
 
     @Bean
-    public ServletRegistrationBean servletRegistrationBean(WebApplicationContext wac)   {
+    public ServletRegistrationBean servletRegistrationBean(WebApplicationContext wac) {
         DispatcherServlet servlet = new DispatcherServlet(wac);
         ServletRegistrationBean srb = new ServletRegistrationBean(servlet, "/api/*");
         srb.setName("ApiServlet");
         return srb;
+    }
+
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+        return application.sources(ApiApplication.class);
     }
 
     @Override

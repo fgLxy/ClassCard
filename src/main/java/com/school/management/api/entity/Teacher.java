@@ -6,7 +6,7 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "teacher")
-@Cacheable
+//@Cacheable
 public class Teacher implements Serializable {
 
     /**

@@ -6,6 +6,7 @@ import com.school.management.api.entity.FoodMenu;
 import com.school.management.api.repository.FoodMenuJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
+import com.school.management.api.utils.ImgUtils;
 import com.school.management.api.vo.FoodVo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -116,12 +118,14 @@ public class FoodMenuController {
      * @return 新增的食谱
      */
     @PostMapping("/add")
-    public Object addFood(FoodMenu foodMenu) {
-        foodMenu.setMenuDate((java.sql.Date) new Date(System.currentTimeMillis()));
+    public Object addFood(FoodMenu foodMenu, String fileName) {
         try {
+//            foodMenu.setMenuDate(new java.sql.Date(System.currentTimeMillis()));
+            foodMenu.setMenuStapleFoodImageUrl(ImgUtils.base64ToImg(foodMenu.getMenuStapleFoodImageUrl(), fileName, "food"));
             return new JsonObjectResult(ResultCode.SUCCESS, "增加数据成功", foodJpa.saveAndFlush(foodMenu));
         } catch (Exception e) {
-            logger.warn("新增失败");
+            e.printStackTrace();
+            logger.warn("新增失败"+e.getMessage());
             return new JsonObjectResult(ResultCode.EXCEPTION, "增加数据失败");
         }
     }
@@ -141,12 +145,12 @@ public class FoodMenuController {
     public Object all() {
         List<Map<String, Object>> datas = new ArrayList<>();
         List<java.sql.Date> dates = foodJpa.getDate();
-        for (java.sql.Date date: dates) {
+        for (java.sql.Date date : dates) {
             if (date != null) {
                 List<Map<String, Object>> menus = foodJpa.getAllByMenuDate(date.toString());
                 Map<String, Object> data = new HashMap<>();
                 List<FoodVo> voList = new ArrayList<>();
-                for (Map<String, Object> menu: menus) {
+                for (Map<String, Object> menu : menus) {
                     voList.add(new FoodVo(menu.get("menu_staple_food_name").toString(), Integer.parseInt(menu.get("menu_dinner").toString())));
                 }
                 data.put("foodDate", date);

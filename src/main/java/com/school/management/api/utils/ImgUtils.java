@@ -28,6 +28,8 @@ public class ImgUtils {
 
     private static File RESOURCE;
 
+    private static final String ROOTPATH = "E:\\class card\\";
+
     public static void base64esToImg(String[] img, String[] fileName) throws Exception {
         OutputStream out = null;
         for (int i = 0; i < img.length; i++) {
@@ -88,15 +90,35 @@ public class ImgUtils {
         }
     }
 
-    public static String base64ToImg(String img, String fileName) throws IOException {
+    public static String base64ToImg(String img, String fileName, String imgPath) throws IOException {
+        System.out.println();
+        System.out.println(imgPath);
+        System.out.println();
+        System.out.println(fileName);
+        System.out.println();
+        System.out.println(img);
+        System.out.println();
         OutputStream out = null;
         byte[] bytes = Base64.decodeBase64(img);
-        File path = new File("D:\\aim\\"+fileName);
+        File dir = new File(ROOTPATH + "\\images\\" + imgPath);
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+        File path = new File(dir.getPath() + "\\" + fileName);
+        if (!path.exists()) {
+            path.getParentFile().mkdir();
+        }
+        path.createNewFile();
+        for (int i = 0; i < bytes.length; ++i) {
+            if (bytes[i] < 0) {// 调整异常数据
+                bytes[i] += 256;
+            }
+        }
         out = new FileOutputStream(path);
         out.write(bytes);
         out.flush();
         out.close();
-        return "http://192.168.1.229:8080/images/" + fileName;
+        return "http://192.168.1.229:8080/images/" + imgPath + "/" + fileName;
     }
 
     public static void filesToImg(String photos) throws Exception {
@@ -131,9 +153,11 @@ public class ImgUtils {
         outStream.close();
     }
 
-    public static List<String> filesToImg(MultipartHttpServletRequest request) throws Exception {
-        String rootPath = "D:\\aim\\";
+    public static List<String> filesToImg(MultipartHttpServletRequest request, String typePath) throws Exception {
+        String rootPath = ROOTPATH + typePath;
+
         Iterator<String> it = request.getFileNames();
+
         List<String> fileNameList = new ArrayList<>();
         File createFile = new File(rootPath);
         if (!createFile.exists()) {
@@ -153,7 +177,7 @@ public class ImgUtils {
                     stream = null;
                     throw e;
                 }
-                fileNameList.add("http://192.168.1.229:8080/images/" + file.getOriginalFilename());
+                fileNameList.add("http://192.168.1.229:8080/" + typePath + "\\" + file.getOriginalFilename());
             } else {
                 throw new Exception("图片内容为空");
             }

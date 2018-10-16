@@ -61,17 +61,15 @@ public class AuthRealm extends AuthorizingRealm {
         String userName = passwordToken.getUsername();
         User user = checkLogin(userName);
 
-        System.out.println();
-        System.out.println(new Gson().toJson(user));
-        System.out.println();
-
         if (user != null) {
             Session session = SecurityUtils.getSubject().getSession();
+            session.setTimeout(86400000L);
             session.setAttribute("userName", user.getUserName());
             session.setAttribute("permission", user.getPermission());
             if (user.getIsTeacher() == 1) {
                 Teacher teacher = teacherJpa.findByUserID(user.getUserId());
                 Class aClass = classJpa.findByClassHeadmaster(teacher);
+                session.setAttribute("headUrl", teacher.getHeadPhoto());
                 if (user.getPermission().getPerId() == 1) {
                     session.setAttribute("principal", teacher.getTeacherName());
                 } else {
@@ -89,6 +87,7 @@ public class AuthRealm extends AuthorizingRealm {
                         session.setAttribute("duty", true);
                     }
                 }
+                session.setAttribute("headUrl", student.getStudentHeaderUrl());
                 session.setAttribute("student", student.getStudentName());
                 session.setAttribute("studentNum", student.getStudentNum());
                 session.setAttribute("className", clazz.getClassName());

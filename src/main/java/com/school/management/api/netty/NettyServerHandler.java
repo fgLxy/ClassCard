@@ -9,10 +9,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.CharsetUtil;
 import org.apache.log4j.Logger;
 
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -34,9 +31,21 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
 
     protected static final Map<Object, Object> nettyMap = new LinkedHashMap<>();
 
-    public static final Map<Object, ChannelId> CODE_CHANNELID = new LinkedHashMap<>();
+    protected static final Map<Object, ChannelId> CODE_CHANNELID = new LinkedHashMap<>();
 
     public static final List<String> PHONENUM = new LinkedList<>();
+
+    protected static final Map<String, Object> CLASSCODE_IP = new HashMap<>();
+
+    /**
+     * 用于在传送课程信息时，方便获取终端IP
+     */
+    protected static final Set<String> IpList = new HashSet<>();
+
+    /**
+     * IP地址—班级课程
+     */
+    protected static final Map<String, Object> IP_SCHEDULE = new HashMap<>();
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {

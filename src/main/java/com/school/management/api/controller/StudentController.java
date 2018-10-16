@@ -6,14 +6,20 @@ import com.school.management.api.entity.Teacher;
 import com.school.management.api.repository.StudentJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
+import com.school.management.api.utils.FileUtils;
 import com.school.management.api.utils.RegexUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping(value = "/school/class")
@@ -47,9 +53,9 @@ public class StudentController {
     }
 
     @PostMapping("/getClassStudent")
-    public Object getClassStudent(@RequestParam(defaultValue = "1")int page, String className) {
+    public Object getClassStudent(@RequestParam(defaultValue = "1") int page, String className) {
         System.out.println(className);
-        return new JsonObjectResult(ResultCode.SUCCESS, "获取数据成功", studentJpa.findByStudentClassroom(className, PageRequest.of(page-1, 8)));
+        return new JsonObjectResult(ResultCode.SUCCESS, "获取数据成功", studentJpa.findByStudentClassroom(className, PageRequest.of(page - 1, 8)));
     }
 
     /**
@@ -93,7 +99,25 @@ public class StudentController {
     }
 
     @PostMapping("/student/query")
-    public Object query(String date, @RequestParam(defaultValue = "1")int page) {
+    public Object query(String date, @RequestParam(defaultValue = "1") int page) {
         return new JsonObjectResult(ResultCode.SUCCESS, "", studentJpa.findByStudentClassroom(date, PageRequest.of(page - 1, 8)));
+    }
+
+    @PostMapping("/student/download")
+    public Object download(String className, HttpServletRequest request) {
+        List<Student> studentSet = studentJpa.findByStudentClassroom(className);
+        FileUtils.createExcel(studentSet.get(0).getStudentClassroom(), studentSet, Student.class, studentJpa.getFireldAndComment());
+        return new JsonObjectResult(ResultCode.SUCCESS, "", "http://192.168.1.229:8080/files/" + className + ".xls");
+    }
+
+    @PostMapping("/student/upload")
+    public Object upload(HttpServletRequest request) {
+        System.out.println("come in");
+//        for (Object key : request.getParameterMap().keySet()) {
+//            System.out.println();
+//            System.out.println(key + "\t:\t" + request.getParameter(key.toString()));
+//            System.out.println();
+//        }
+        return new JsonObjectResult(ResultCode.SUCCESS, "");
     }
 }

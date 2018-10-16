@@ -9,6 +9,9 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * 学生相关信息
+ */
 @Entity
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Table(name = "student")
@@ -77,29 +80,53 @@ public class Student implements Serializable {
     @Column(name = "student_num", nullable = false)
     private int studentNum;
 
-    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
+    /**
+     * 用户ID
+     */
+    @JoinColumn(name = "userID", referencedColumnName = "user_id")
     private long userID;
 
-    @Column(name = "student_birthday", nullable = false)
+    /**
+     * 学生生日
+     */
+    @Column(name = "birthday", nullable = false)
     private String birthday;
 
-    @Column(name = "student_matriculation_time", nullable = false)
+    /**
+     * 入学时间
+     */
+    @Column(name = "matriculation_time", nullable = false)
     private String matriculationTime;
 
-    @Column(name = "student_graduation_time", nullable = false)
+    /**
+     * 毕业时间
+     */
+    @Column(name = "graduation_time", nullable = false)
     private String graduationTime;
 
-    @Column(name = "student_household_registration", nullable = false)
+    /**
+     * 户籍
+     */
+    @Column(name = "household_registration", nullable = false)
     private String householdRegistration;
 
-    @Column(name = "student_account", nullable = false)
+    /**
+     * 户口（1——城镇；2——农村）
+     */
+    @Column(name = "account", nullable = false)
     private String account;
 
+    /**
+     * 学生成绩
+     */
     @OneToMany(fetch = FetchType.EAGER)
     @Fetch(FetchMode.SUBSELECT)
     @JoinColumn(name = "grade_student_id", referencedColumnName = "student_num", insertable = false, updatable = false)
     private List<Grade> grades;
 
+    /**
+     * 学生考勤
+     */
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "attendance_student_num", referencedColumnName = "student_num")
     private List<Attendance> attendances;

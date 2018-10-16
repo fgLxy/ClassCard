@@ -37,18 +37,6 @@ public class ClassController extends NettyServerHandler {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    /**
-     * 用于在传送课程信息时，方便获取终端IP
-     */
-    private static final Set<String> IpList = new HashSet<>();
-
-    /**
-     * IP地址—班级课程
-     */
-    private static final Map<String, Object> IP_SCHEDULE = new HashMap<>();
-
-    private static final Map<String, Object> CLASSCODE_IP = new HashMap<>();
-
     @Autowired
     public IpJpaRepository ipJpa;
 
@@ -117,6 +105,9 @@ public class ClassController extends NettyServerHandler {
      */
     @PostMapping("/showName")
     public Object showClassName(String IP) {
+        System.out.println();
+        System.out.println(IP);
+        System.out.println();
         Class aClass;
         Gson gson = new Gson();
         ClassName name = new ClassName();
@@ -363,35 +354,40 @@ public class ClassController extends NettyServerHandler {
      */
     @PostMapping("/addClass")
     public Object addClass(AddedClass addedClass) {
-        Class aClass = new Class();
-        aClass.setClassDate(addedClass.getClassDate());
-        aClass.setClassroomCode(addedClass.getClassroomCode());
-        Student student = studentJpa.findByStudentNameAndStudentClassroom(addedClass.getClassMonitor(), addedClass.getClassName());
-        if (student != null) {
-            aClass.setClassMonitor(student);
-        } else {
-            Student nullStudent = new Student();
-            nullStudent.setStudentClassroom(addedClass.getClassName());
-            nullStudent.setStudentName(addedClass.getClassMonitor());
-            nullStudent.setStudentNum((int) (Math.random() * 1000000));
-            nullStudent.setStudentCardNum(String.valueOf(Math.random() * 1000000));
-            aClass.setClassMonitor(studentJpa.save(nullStudent));
+        try {
+            Class aClass = new Class();
+            aClass.setClassDate(addedClass.getClassDate());
+            aClass.setClassroomCode(addedClass.getClassroomCode());
+            Student student = studentJpa.findByStudentNameAndStudentClassroom(addedClass.getClassMonitor(), addedClass.getClassName());
+            if (student != null) {
+                aClass.setClassMonitor(student);
+            } else {
+                Student nullStudent = new Student();
+                nullStudent.setStudentClassroom(addedClass.getClassName());
+                nullStudent.setStudentName(addedClass.getClassMonitor());
+                nullStudent.setStudentNum((int) (Math.random() * 1000000));
+                nullStudent.setStudentCardNum(String.valueOf(Math.random() * 1000000));
+                aClass.setClassMonitor(studentJpa.save(nullStudent));
+            }
+            aClass.setClassMoralEducation(addedClass.getClassMoralEducation());
+            aClass.setClassName(addedClass.getClassName());
+            aClass.setClassStudentTotal(addedClass.getClassStudentTotal());
+            Teacher teacher = teacherJpa.findByTeacherName(addedClass.getClassHeadmaster());
+            if (Integer.parseInt(addedClass.getClassScore()) <= 5) {
+                aClass.setClassScore(Integer.parseInt(addedClass.getClassScore()));
+            } else {
+                return new JsonObjectResult(ResultCode.PARAMS_ERROR, "班级评分不能超过整数5");
+            }
+            if (teacher != null) {
+                aClass.setClassHeadmaster(teacher);
+            } else {
+                return new JsonObjectResult(ResultCode.PARAMS_ERROR, "添加失败，找不到教师信息。请核对该教师是否还在职！");
+            }
+            return new JsonObjectResult(ResultCode.SUCCESS, "添加成功", classJpa.saveAndFlush(aClass));
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+            return new JsonObjectResult(ResultCode.EXCEPTION, "班级名称已存在");
         }
-        aClass.setClassMoralEducation(addedClass.getClassMoralEducation());
-        aClass.setClassName(addedClass.getClassName());
-        aClass.setClassStudentTotal(addedClass.getClassStudentTotal());
-        Teacher teacher = teacherJpa.findByTeacherName(addedClass.getClassHeadmaster());
-        if (Integer.parseInt(addedClass.getClassScore()) <= 5) {
-            aClass.setClassScore(Integer.parseInt(addedClass.getClassScore()));
-        } else {
-            return new JsonObjectResult(ResultCode.PARAMS_ERROR, "班级评分不能超过整数5");
-        }
-        if (teacher != null) {
-            aClass.setClassHeadmaster(teacher);
-        } else {
-            return new JsonObjectResult(ResultCode.PARAMS_ERROR, "添加失败，找不到教师信息。请核对该教师是否还在职！");
-        }
-        return new JsonObjectResult(ResultCode.SUCCESS, "添加成功", classJpa.saveAndFlush(aClass));
     }
 
     /**
@@ -524,6 +520,21 @@ public class ClassController extends NettyServerHandler {
                 Map<String, Object> map = new HashMap<>();
                 List<Map<String, Object>> schedules = new ArrayList<>();
                 Set<Schedule> queue = ((Set<Schedule>) IP_SCHEDULE.get(ip));
+                for (Channel channel1 : NettyChannelHandlerPool.channelGroup) {
+                    System.out.println();
+                    System.out.println(channel1.remoteAddress());
+                    System.out.println();
+                    System.out.println(channel1.id());
+                    System.out.println();
+                    System.out.println(channel1.localAddress());
+                    System.out.println();
+                }
+
+                for (String key : IP_SCHEDULE.keySet()) {
+                    System.out.println();
+                    System.out.println(key + "\t:\t" + new Gson().toJson(IP_SCHEDULE.get(key)));
+                    System.out.println();
+                }
                 map.put("type", 1);
                 if (queue.size() > 0 && channel != null) {
                     int i = 0;
@@ -573,58 +584,60 @@ public class ClassController extends NettyServerHandler {
                 }
             }
         }
-        if (CODE_CHANNELID.containsValue(ctxList.get(ctxList.size() - 1).channel().id())) {
+        if (ctxList.size() > 0 && CODE_CHANNELID.containsValue(ctxList.get(ctxList.size() - 1).channel().id())) {
             Iterator code = CODE_CHANNELID.keySet().iterator();
             while (code.hasNext()) {
                 Object classCode = code.next();
-                ChannelId channelId = CODE_CHANNELID.get(classCode);
-                if (channelId != null) {
-                    Channel channel = NettyChannelHandlerPool.channelGroup.find(channelId);
-                    Map<String, Object> map = new HashMap<>();
-                    List<Map<String, Object>> schedules = new ArrayList<>();
-                    map.put("type", 1);
-                    Set<Schedule> queue = classJpa.findByClassroomCode(Integer.parseInt(classCode.toString())).getSchedules();
-                    if (queue.size() > 0 && channel != null) {
-                        int i = 0;
-                        Schedule set = null;
-                        for (Schedule schedule : queue) {
-                            try {
-                                if (schedule != null && i < 2) {
-                                    Map<String, Object> datas = new HashMap<>();
-                                    if (!schedule.getScheduleDate().equals(new SimpleDateFormat("EE").format(new Date(System.currentTimeMillis())))) {
-                                        continue;
-                                    } else if (format.parse(schedule.getLessonEndtime()).getTime() < format.parse(format.format(new Time(System.currentTimeMillis()))).getTime()) {
-                                        continue;
+                if (classCode != "" && classCode != null) {
+                    ChannelId channelId = CODE_CHANNELID.get(classCode);
+                    if (channelId != null) {
+                        Channel channel = NettyChannelHandlerPool.channelGroup.find(channelId);
+                        Map<String, Object> map = new HashMap<>();
+                        List<Map<String, Object>> schedules = new ArrayList<>();
+                        map.put("type", 1);
+                        Set<Schedule> queue = classJpa.findByClassroomCode(Integer.parseInt(classCode.toString())).getSchedules();
+                        if (queue.size() > 0 && channel != null) {
+                            int i = 0;
+                            Schedule set = null;
+                            for (Schedule schedule : queue) {
+                                try {
+                                    if (schedule != null && i < 2) {
+                                        Map<String, Object> datas = new HashMap<>();
+                                        if (!schedule.getScheduleDate().equals(new SimpleDateFormat("EE").format(new Date(System.currentTimeMillis())))) {
+                                            continue;
+                                        } else if (format.parse(schedule.getLessonEndtime()).getTime() < format.parse(format.format(new Time(System.currentTimeMillis()))).getTime()) {
+                                            continue;
+                                        }
+                                        datas.put("courseName", schedule.getCourseName().getCourseName());
+                                        datas.put("startTime", schedule.getCourseStarttime().substring(0, schedule.getCourseStarttime().lastIndexOf(":")));
+                                        datas.put("endTime", schedule.getLessonEndtime().substring(0, schedule.getLessonEndtime().lastIndexOf(":")));
+                                        datas.put("teacherId", schedule.getInstructor().getTeacherId());
+                                        datas.put("teacherName", schedule.getInstructor().getTeacherName());
+                                        datas.put("headUrl", schedule.getInstructor().getHeadPhoto());
+                                        datas.put("lessonRepresentative", schedule.getLessonRepresentative());
+                                        schedules.add(datas);
+                                        if (i == 0) set = schedule;
+                                        i++;
                                     }
-                                    datas.put("courseName", schedule.getCourseName().getCourseName());
-                                    datas.put("startTime", schedule.getCourseStarttime().substring(0, schedule.getCourseStarttime().lastIndexOf(":")));
-                                    datas.put("endTime", schedule.getLessonEndtime().substring(0, schedule.getLessonEndtime().lastIndexOf(":")));
-                                    datas.put("teacherId", schedule.getInstructor().getTeacherId());
-                                    datas.put("teacherName", schedule.getInstructor().getTeacherName());
-                                    datas.put("headUrl", schedule.getInstructor().getHeadPhoto());
-                                    datas.put("lessonRepresentative", schedule.getLessonRepresentative());
-                                    schedules.add(datas);
-                                    if (i == 0) set = schedule;
-                                    i++;
+                                } catch (Exception e) {
+                                    e.printStackTrace();
                                 }
-                            } catch (Exception e) {
-                                e.printStackTrace();
                             }
-                        }
-                        if (set != null) {
-                            queue.remove(set);
-                        }
-                        if (schedules.isEmpty()) {
-                            map.put("message", "今日课程已结束");
-                            map.put("data", new ArrayList<>());
+                            if (set != null) {
+                                queue.remove(set);
+                            }
+                            if (schedules.isEmpty()) {
+                                map.put("message", "今日课程已结束");
+                                map.put("data", new ArrayList<>());
+                            } else {
+                                map.put("message", "处理数据成功");
+                                map.put("data", schedules);
+                            }
+                            channel.writeAndFlush(Unpooled.copiedBuffer(new Gson().toJson(map), CharsetUtil.UTF_8));
                         } else {
-                            map.put("message", "处理数据成功");
-                            map.put("data", schedules);
-                        }
-                        channel.writeAndFlush(Unpooled.copiedBuffer(new Gson().toJson(map), CharsetUtil.UTF_8));
-                    } else {
-                        if (channel == null) {
-                            logger.warn("未找到班牌终端");
+                            if (channel == null) {
+                                logger.warn("未找到班牌终端");
+                            }
                         }
                     }
                 }
@@ -651,6 +664,8 @@ public class ClassController extends NettyServerHandler {
                 nettyMap.put(ip, ctx.channel().id());
             }
         }
+
+
         isEnd();
     }
 

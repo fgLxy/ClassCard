@@ -108,7 +108,7 @@ public class CommentController {
         MultipartHttpServletRequest multipartHttpServletRequest = ((MultipartHttpServletRequest) request);
         List<String> urls;
         try {
-            urls = ImgUtils.filesToImg(multipartHttpServletRequest);
+            urls = ImgUtils.filesToImg(multipartHttpServletRequest, "images\\comment");
         } catch (Exception e) {
             e.printStackTrace();
             return new JsonObjectResult(ResultCode.EXCEPTION, e.getMessage());
@@ -165,7 +165,7 @@ public class CommentController {
             List<String> urls = null;
             if (request instanceof MultipartHttpServletRequest) {
                 MultipartHttpServletRequest multipartHttpServletRequest = (MultipartHttpServletRequest) request;
-                urls = ImgUtils.filesToImg(multipartHttpServletRequest);
+                urls = ImgUtils.filesToImg(multipartHttpServletRequest, "images\\comment");
             }
 
             for (Student student : studentSet) {

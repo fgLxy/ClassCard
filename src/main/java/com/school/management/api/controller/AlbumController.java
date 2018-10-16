@@ -29,17 +29,23 @@ public class AlbumController {
      * 添加一个相册信息
      */
     @PostMapping(value = "/addAlbum")
-    public Object addAlbum(Album album, HttpServletRequest request) {
+    public Object addAlbum(Album album, String fileName, HttpServletRequest request) {
+        System.out.println(new Gson().toJson(album));
         try {
-            List<String> urls = ImgUtils.filesToImg((MultipartHttpServletRequest) request);
-            for (String url : urls) {
-                Album album1 = new Album();
-                album1.setAlbumType(album.getAlbumType());
-                album1.setClassRoomCode(album.getClassRoomCode());
-                album1.setDescribe(album.getDescribe());
-                album1.setPhotoUrl(url);
-                album1.setAddedDate(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(System.currentTimeMillis())));
-                albumJpaRepository.save(album1);
+            if (album.getPhotoUrl() == null) {
+                List<String> urls = ImgUtils.filesToImg((MultipartHttpServletRequest) request, "images\\album");
+                for (String url : urls) {
+                    Album album1 = new Album();
+                    album1.setAlbumType(album.getAlbumType());
+                    album1.setClassRoomCode(album.getClassRoomCode());
+                    album1.setDescribe(album.getDescribe());
+                    album1.setPhotoUrl(url);
+                    album1.setAddedDate(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(System.currentTimeMillis())));
+                    albumJpaRepository.save(album1);
+                }
+            } else {
+                album.setPhotoUrl(ImgUtils.base64ToImg(album.getPhotoUrl(), fileName, "album"));
+                albumJpaRepository.saveAndFlush(album);
             }
             return new JsonObjectResult(ResultCode.SUCCESS, "添加数据成功");
         } catch (Exception e) {
@@ -101,7 +107,6 @@ public class AlbumController {
      */
     @PostMapping(value = "/updateAlbum")
     public Object upDateAlbum(Album album) {
-        System.out.println(new Gson().toJson(album));
         Album old = albumJpaRepository.getAlbumById(album.getId());
         if (old != null) {
             try {

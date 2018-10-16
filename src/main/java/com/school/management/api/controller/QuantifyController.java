@@ -36,16 +36,16 @@ public class QuantifyController {
 
     @PostMapping("/query")
     public Object query(String className) {
-        return list(1, (int) classJpa.findByClassName(className).getClassId());
+        return list(1, className);
     }
 
     @RequestMapping("/list")
-    public Object list(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "0") int classId) {
+    public Object list(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "0") String classId) {
         List<Quantify> quantifies = null;
-        if (classId == 0) {
+        if (classId == null) {
             quantifies = jpa.findAll(new PageRequest(page - 1, 8)).getContent();
         } else {
-            quantifies = jpa.findByClassId(classId, new PageRequest(page - 1, 8)).getContent();
+            quantifies = jpa.findByClassCode(classJpa.findByClassName(classId).getClassroomCode(), new PageRequest(page - 1, 8)).getContent();
         }
         List<Map<String, Object>> datas = new ArrayList<>();
         for (Quantify quantify : quantifies) {
@@ -70,7 +70,7 @@ public class QuantifyController {
     public Object add(Quantify quantify, HttpServletRequest request) {
         if (quantify != null) {
             try {
-                List<String> urls = ImgUtils.filesToImg((MultipartHttpServletRequest) request);
+                List<String> urls = ImgUtils.filesToImg((MultipartHttpServletRequest) request, "images\\quantify");
                 quantify.setQuantifyDate(new SimpleDateFormat("yyyy-MM-dd").format(new Date(System.currentTimeMillis())));
                 quantify.setQuantifyPhotoUrl(new Gson().toJson(urls));
             } catch (Exception e) {

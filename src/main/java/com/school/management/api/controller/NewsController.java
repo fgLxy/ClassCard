@@ -7,6 +7,8 @@ import com.school.management.api.repository.NewsJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
 import com.school.management.api.utils.ImgUtils;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.session.Session;
 import org.omg.CORBA.OBJ_ADAPTER;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,18 +81,21 @@ public class NewsController {
 
     @PostMapping("/add")
     public Object add(News news, String imageUrl) {
-        System.out.println(imageUrl);
         List<Map<String, Object>> mapList = new Gson().fromJson(imageUrl, new TypeToken<List<Map<String, Object>>>() {
         }.getType());
         try {
+            Session session = SecurityUtils.getSubject().getSession();
             for (Map<String, Object> map : mapList) {
-                news.setImageUrl_1(ImgUtils.base64ToImg(map.get("base64").toString().split(",")[0], map.get("fileName").toString()));
+                news.setImageUrl_1(ImgUtils.base64ToImg(map.get("base64").toString().split(",")[1], map.get("fileName").toString(), "news"));
             }
-
-            return new JsonObjectResult(ResultCode.SUCCESS, "添加成功");//, newsJpaRepository.saveAndFlush(news));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return new JsonObjectResult(ResultCode.EXCEPTION);
+            if (session != null) {
+                news.setPublishUser(session.getAttribute("userName").toString());
+            } else {
+                return new JsonObjectResult(ResultCode.EXCEPTION, "账户已过期，请重新登录");
+            }
+            return new JsonObjectResult(ResultCode.SUCCESS, "添加成功", newsJpaRepository.saveAndFlush(news));
+        } catch (Exception e) {
+            return new JsonObjectResult(ResultCode.EXCEPTION, e.getMessage());
         }
     }
 
@@ -116,6 +121,8 @@ public class NewsController {
     public Object update(News news) {
         News old = newsJpaRepository.getNewsByNewsId(news.getNewsId());
         if (old != null) {
+            Session session = SecurityUtils.getSubject().getSession();
+            news.setPublishUser(session.getAttribute("userName").toString());
             return new JsonObjectResult(ResultCode.SUCCESS, "修改成功", newsJpaRepository.saveAndFlush(news));
         }
         return new JsonObjectResult(ResultCode.PARAMS_ERROR, "待修改的数据已经过时。");
@@ -124,16 +131,6 @@ public class NewsController {
     @PostMapping("/query")
     public Object query(String date, @RequestParam(defaultValue = "1") int page) {
         return new JsonObjectResult(ResultCode.SUCCESS, "", newsJpaRepository.findByPublishDateLike(date + "%", PageRequest.of(page - 1, 8)));
-    }
-
-    @PostMapping("/")
-    public Object $y(String img, String fileName) {
-        try {
-            return ImgUtils.base64ToImg(img, fileName);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return e.getMessage();
-        }
     }
 
     @PostMapping("/all")

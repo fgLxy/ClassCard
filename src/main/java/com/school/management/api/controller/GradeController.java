@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import java.sql.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
@@ -218,5 +220,64 @@ public class GradeController {
         datas.put("count", count);
         datas.put("gradeInfo", gradeInfo);
         return new JsonObjectResult(ResultCode.SUCCESS, "获取数据成功", datas);
+    }
+
+    /**
+     * 该学生每月考试的总分，平均分，
+     *
+     * @param studentNum 学号
+     * @return 该学生每月考试的总分，平均分，日期
+     */
+    @PostMapping("/analysisByStudent")
+    public Object analysisByStudent(String studentNum) {
+        Student student = studentJpa.findByStudentNum(Integer.parseInt(studentNum));
+        if (student != null) {
+            List<Grade> gradeList = student.getGrades();
+//            排序方便区分
+            gradeList.sort(new Comparator<Grade>() {
+                @Override
+                public int compare(Grade o1, Grade o2) {
+                    return o2.getGradeDate().compareTo(o1.getGradeDate());
+                }
+            });
+//            用以区分每次考试
+            Map<String, Object> date = new HashMap<>();
+//            存放每个月各科的成绩
+            Map<String, List<Grade>> courseGrade = new HashMap<>();
+            for (Grade grade : gradeList) {
+                if (!date.containsValue(grade.getGradeDate())) {
+                    date.put("date", grade.getGradeDate());
+                    courseGrade.put(grade.getGradeDate(), gradeJpa.getByStudentIdAndGradeDateLike(Integer.parseInt(studentNum), grade.getGradeDate() + "%"));
+                }
+            }
+            Iterator<String> it = courseGrade.keySet().iterator();
+            List<Map<String, Object>> datas = new LinkedList<>();
+            while (it.hasNext()) {
+                Map<String, Object> data = new HashMap<>();
+                String key = it.next();
+                int count = 0;
+                for (Grade grade : courseGrade.get(key)) {
+                    count += grade.getGradeSorce();
+                }
+                data.put("date", key);
+                data.put("studentName", student.getStudentName());
+                data.put("count", count);
+                data.put("avg", ((double) count) / ((double) (courseGrade.get(key).size())));
+                datas.add(data);
+            }
+            return new JsonObjectResult(ResultCode.SUCCESS, "", datas);
+        }
+        return new JsonObjectResult(ResultCode.PARAMS_ERROR, "");
+    }
+
+    @PostMapping("/analysisByClass")
+    public Object analysisByClass(String classCode) {
+        Set<Student> studentList = classJpa.findByClassroomCode(Integer.parseInt(classCode)).getStudents();
+        List<List<Map<String, Object>>> list = new LinkedList<>();
+        for (Student student : studentList) {
+//            该班级下每个学生的每次考试的   总分， 平均分， 日期
+            list.add((List<Map<String, Object>>) ((JsonObjectResult)(analysisByStudent(String.valueOf(student.getStudentNum())))).getData());
+        }
+        return new JsonObjectResult(ResultCode.SUCCESS, "", list);
     }
 }

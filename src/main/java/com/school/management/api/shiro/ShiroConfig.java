@@ -21,6 +21,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.support.StandardServletMultipartResolver;
 
 import javax.servlet.Filter;
 import java.io.IOException;
@@ -73,21 +75,21 @@ public class ShiroConfig {
      * EhCacheManager，缓存管理，用户登陆成功后，把用户信息和权限信息缓存起来，
      * 然后每次用户请求时，放入用户的session中，如果不设置这个bean，每个请求都会查询一次数据库。
      */
-    @Bean(name = "ehCacheManager")
-    @DependsOn("lifecycleBeanPostProcessor")
-    public EhCacheManager ehCacheManager() {
-        EhCacheManager ehcache = new EhCacheManager();
-        CacheManager cacheManager = CacheManager.getCacheManager("shiro");
-        if (cacheManager == null) {
-            try {
-                cacheManager = CacheManager.create(ResourceUtils.getInputStreamForPath("classpath:shiro-ehcache.xml"));
-            } catch (CacheException | IOException e) {
-                e.printStackTrace();
-            }
-        }
-        ehcache.setCacheManager(cacheManager);
-        return ehcache;
-    }
+//    @Bean(name = "ehCacheManager")
+//    @DependsOn("lifecycleBeanPostProcessor")
+//    public EhCacheManager ehCacheManager() {
+//        EhCacheManager ehcache = new EhCacheManager();
+//        CacheManager cacheManager = CacheManager.getCacheManager("shiro");
+//        if (cacheManager == null) {
+//            try {
+//                cacheManager = CacheManager.create(ResourceUtils.getInputStreamForPath("classpath:shiro-ehcache.xml"));
+//            } catch (CacheException | IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        ehcache.setCacheManager(cacheManager);
+//        return ehcache;
+//    }
 
     /**
      * SecurityManager，权限管理，这个类组合了登陆，登出，权限，session的处理，是个比较重要的类。
@@ -96,7 +98,7 @@ public class ShiroConfig {
     public DefaultWebSecurityManager securityManager() {
         DefaultWebSecurityManager securityManager = new DefaultWebSecurityManager();
         securityManager.setRealm(shiroRealm());
-        securityManager.setCacheManager(ehCacheManager());
+//        securityManager.setCacheManager(ehCacheManager());
         // //注入session管理器;
         securityManager.setSessionManager(sessionManager());
         //注入Cookie记住我管理器
@@ -162,7 +164,7 @@ public class ShiroConfig {
     public EnterpriseCacheSessionDAO enterCacheSessionDAO() {
         EnterpriseCacheSessionDAO enterCacheSessionDAO = new EnterpriseCacheSessionDAO();
         //添加缓存管理器
-        enterCacheSessionDAO.setCacheManager(ehCacheManager());
+//        enterCacheSessionDAO.setCacheManager(ehCacheManager());
         //添加ehcache活跃缓存名称（必须和ehcache缓存名称一致）
         enterCacheSessionDAO.setActiveSessionsCacheName("shiro-activeSessionCache");
         return enterCacheSessionDAO;
@@ -191,7 +193,7 @@ public class ShiroConfig {
         //使用cacheManager获取相应的cache来缓存用户登录的会话；用于保存用户—会话之间的关系的；
         //这里我们还是用之前shiro使用的ehcache实现的cacheManager()缓存管理
         //也可以重新另写一个，重新配置缓存时间之类的自定义缓存属性
-        kickoutSessionFilter.setCacheManager(ehCacheManager());
+//        kickoutSessionFilter.setCacheManager(ehCacheManager());
         //用于根据会话ID，获取会话进行踢出操作的；
         kickoutSessionFilter.setSessionManager(sessionManager());
         //是否踢出后来登录的，默认是false；即后者登录的用户踢出前者登录的用户；踢出顺序。
@@ -225,5 +227,10 @@ public class ShiroConfig {
         //记住我cookie生效时间30天 ,单位秒  [10天]
         scookie.setMaxAge(864000);
         return scookie;
+    }
+
+    @Bean
+    public MultipartResolver mulitipartResovler() throws IOException{
+        return new StandardServletMultipartResolver();
     }
 }

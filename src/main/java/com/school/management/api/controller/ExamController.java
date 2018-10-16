@@ -3,12 +3,19 @@ package com.school.management.api.controller;
 
 import com.google.gson.Gson;
 import com.school.management.api.entity.Exam;
+import com.school.management.api.entity.Ip;
 import com.school.management.api.entity.Teacher;
+import com.school.management.api.netty.NettyChannelHandlerPool;
 import com.school.management.api.netty.NettyServerHandler;
+import com.school.management.api.repository.ClassJpaRepository;
 import com.school.management.api.repository.ExamJpaRepository;
+import com.school.management.api.repository.IpJpaRepository;
 import com.school.management.api.repository.TeacherJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +42,12 @@ public class ExamController extends NettyServerHandler {
 
     @Autowired
     private TeacherJpaRepository teacherJpa;
+
+    @Autowired
+    private ClassJpaRepository classJpa;
+
+    @Autowired
+    private IpJpaRepository ipJpa;
 
     @GetMapping("/listAll")
     public Object listAll(@RequestParam(name = "page", defaultValue = "1") int page) {
@@ -83,7 +96,22 @@ public class ExamController extends NettyServerHandler {
             map.put("type", 2);
             map.put("data", datas);
             map.put("message", "处理数据成功");
-            this.sendAll(this.ctx, new Gson().toJson(map));
+            for (String ip : IpList) {
+                System.out.println();
+                System.out.println(ip);
+                System.out.println();
+                Channel channel = NettyChannelHandlerPool.channelGroup.find((ChannelId) nettyMap.get(ip));
+                if (channel != null) {
+                    System.out.println();
+                    System.out.println(new Gson().toJson(map));
+                    System.out.println();
+                    ChannelFuture future = channel.writeAndFlush(new Gson().toJson(map));
+                    System.out.println();
+                    System.out.println(future.isDone());
+                    System.out.println();
+                }
+            }
+//            this.sendAll(this.ctx, new Gson().toJson(map));
             String teacheres = Arrays.toString(teacherNames);
             exam.setTeacherId(teacheres.substring(1, teacheres.length() - 1));
             return new JsonObjectResult(ResultCode.SUCCESS, "添加数据成功", examJpa.save(exam));

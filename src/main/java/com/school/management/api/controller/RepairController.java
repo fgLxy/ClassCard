@@ -122,4 +122,9 @@ public class RepairController {
     public Object allRepair(){
         return new JsonObjectResult(ResultCode.SUCCESS, "", jpa.findByRepairStatus(0));
     }
+
+    @GetMapping("/listComplete")
+    public Object listComplete(String classCode) {
+        return new JsonObjectResult(ResultCode.SUCCESS, "", jpa.findByRepairStatus(1));
+    }
 }

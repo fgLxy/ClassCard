@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.transaction.Transactional;
 import java.util.List;
+import java.util.Map;
 
 @Transactional
 @Repository
@@ -43,4 +44,6 @@ public interface StudentJpaRepository extends JpaRepository<Student, Long> {
 
     Student findByStudentNum(int studentNum);
 
+    @Query(nativeQuery = true, value = "select COLUMN_NAME as columnName, column_comment as columnComment from INFORMATION_SCHEMA.Columns where table_name='student' and table_schema='school'")
+    List<Map<String, Object>> getFireldAndComment();
 }

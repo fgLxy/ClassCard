@@ -49,7 +49,7 @@ public class HomeWorkController {
     public Object add(HomeWork homeWork, HttpServletRequest request) {
         try {
             homeWork.setWorkDate(new Date(System.currentTimeMillis()));
-            homeWork.setWorkPhotos(new Gson().toJson(ImgUtils.filesToImg((MultipartHttpServletRequest) request)));
+            homeWork.setWorkPhotos(new Gson().toJson(ImgUtils.filesToImg((MultipartHttpServletRequest) request, "images\\homeWork")));
         } catch (Exception e) {
             e.printStackTrace();
             return new JsonObjectResult(ResultCode.EXCEPTION, e.getMessage());
