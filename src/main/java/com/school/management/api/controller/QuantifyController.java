@@ -1,7 +1,6 @@
 package com.school.management.api.controller;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.school.management.api.entity.Class;
 import com.school.management.api.entity.Quantify;
 import com.school.management.api.repository.ClassJpaRepository;
@@ -9,9 +8,8 @@ import com.school.management.api.repository.QuantifyJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
 import com.school.management.api.utils.ImgUtils;
-import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.session.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,12 +33,28 @@ public class QuantifyController {
     private ClassJpaRepository classJpa;
 
     @PostMapping("/query")
-    public Object query(String className) {
-        return list(1, className);
+    public Object query(String className, @RequestParam(defaultValue = "1") int page, String date) {
+        Page<Quantify> quantifies = jpa.findByQuantifyDateLikeAndClassCode(date, classJpa.findByClassName(className).getClassroomCode(), PageRequest.of(page - 1, 10));
+        List<Map<String, Object>> datas = new ArrayList<>();
+        for (Quantify quantify : quantifies) {
+            Map<String, Object> data = new HashMap<>();
+            Class aClass = classJpa.findByClassId(quantify.getClassId());
+            data.put("quantifyId", quantify.getQuantifyId());
+            data.put("classHeadmaster", aClass.getClassHeadmaster().getTeacherName());
+            data.put("quantifyType", quantify.getQuantifyType());
+            if (aClass.getClassMonitor() != null) {
+                data.put("classMonitor", aClass.getClassMonitor().getStudentName());
+            } else {
+                data.put("classMonitor", null);
+            }
+            data.put("quantifyRemark", quantify.getQuantifyRemark());
+            datas.add(data);
+        }
+        return new JsonObjectResult(ResultCode.SUCCESS, "", datas);
     }
 
     @RequestMapping("/list")
-    public Object list(@RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "0") String classId) {
+    public Object list(@RequestParam(defaultValue = "1") int page, String classId) {
         List<Quantify> quantifies = null;
         if (classId == null) {
             quantifies = jpa.findAll(new PageRequest(page - 1, 8)).getContent();
@@ -70,7 +84,12 @@ public class QuantifyController {
     public Object add(Quantify quantify, HttpServletRequest request) {
         if (quantify != null) {
             try {
-                List<String> urls = ImgUtils.filesToImg((MultipartHttpServletRequest) request, "images\\quantify");
+                List<String> urls = null;
+                if (request instanceof MultipartHttpServletRequest) {
+                    urls = ImgUtils.filesToImg((MultipartHttpServletRequest) request, "images\\quantify");
+                } else {
+
+                }
                 quantify.setQuantifyDate(new SimpleDateFormat("yyyy-MM-dd").format(new Date(System.currentTimeMillis())));
                 quantify.setQuantifyPhotoUrl(new Gson().toJson(urls));
             } catch (Exception e) {

@@ -44,6 +44,8 @@ public interface AlbumJpaRepository extends JpaRepository<Album, Long> {
 
     List<Album> findByAddedDateLike(String date);
 
+    Page<Album> findByAddedDateLike(String date, Pageable pageable);
+
     Page<Album> findByAlbumType(int type, Pageable pageable);
 
     List<Album> findByAlbumType(int type);

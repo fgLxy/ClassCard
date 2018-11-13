@@ -1,7 +1,6 @@
 package com.school.management.api.netty;
 
 import com.school.management.api.controller.ClassController;
-import com.school.management.api.controller.NoticeController;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;

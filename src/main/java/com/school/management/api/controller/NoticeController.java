@@ -5,25 +5,22 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.school.management.api.entity.Notice;
 import com.school.management.api.netty.NettyServerHandler;
-import com.school.management.api.repository.ClassJpaRepository;
-import com.school.management.api.repository.IpJpaRepository;
 import com.school.management.api.repository.NoticeJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
-import com.school.management.api.utils.GsonUtil;
 import com.school.management.api.utils.ImgUtils;
-import com.school.management.api.utils.NettyClientUtil;
-import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -169,7 +166,7 @@ public class NoticeController extends NettyServerHandler {
      * @return 根据日期来查询得到的部分通知
      */
     @PostMapping("/queryByTime")
-    public Object queryByTime(String date) {
-        return new JsonObjectResult(ResultCode.SUCCESS, "查询成功", noticeJpa.findByNoticeTimeLike(date + "%"));
+    public Object queryByTime(String date, @RequestParam(defaultValue = "1") int page) {
+        return new JsonObjectResult(ResultCode.SUCCESS, "查询成功", noticeJpa.findByNoticeTimeLike(date + "%", PageRequest.of(page - 1, 8)));
     }
 }

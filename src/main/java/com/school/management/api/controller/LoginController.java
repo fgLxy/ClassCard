@@ -1,9 +1,10 @@
 package com.school.management.api.controller;
 
 import com.aliyuncs.dysmsapi.model.v20170525.SendSmsResponse;
-import com.google.gson.Gson;
-import com.school.management.api.entity.*;
-import com.school.management.api.entity.Class;
+import com.school.management.api.entity.Permission;
+import com.school.management.api.entity.Student;
+import com.school.management.api.entity.Teacher;
+import com.school.management.api.entity.User;
 import com.school.management.api.netty.NettyServerHandler;
 import com.school.management.api.repository.ClassJpaRepository;
 import com.school.management.api.repository.StudentJpaRepository;
@@ -33,8 +34,8 @@ import java.io.FileNotFoundException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 
 
 @Controller
@@ -63,7 +64,7 @@ public class LoginController {
      */
     @PostMapping("/login")
     @ResponseBody
-    public Object login(String userName, String password, HttpServletRequest request) {
+    public Object login(String userName, String password) {
         Subject subject = SecurityUtils.getSubject();
         UsernamePasswordToken token = new UsernamePasswordToken(userName, password);
         Map<Object, Object> map = new HashMap<>();
@@ -95,6 +96,7 @@ public class LoginController {
             }
             if (RegexUtils.checkMobile(userName))
                 NettyServerHandler.PHONENUM.add(userName);
+            session.removeAttribute("code");
             return new JsonObjectResult(ResultCode.SUCCESS, "登录成功", map);
         } catch (Exception e) {
             logger.error(e.getMessage());
@@ -149,23 +151,37 @@ public class LoginController {
     }
 
     @PostMapping("/loginApp")
+    @ResponseBody
     public Object loginApp(String phone, String code) {
-
-        Map<String, Object> data = new HashMap<>();
-//        data.put("permission", user.getPermission().getPerName());
-//        data.put("userName", user.getUserName());
-
-        return new JsonObjectResult(ResultCode.SUCCESS, "登录成功", data);
+        Session session = SecurityUtils.getSubject().getSession();
+        String sessionCode = session.getAttribute("code").toString();
+        if (code.equals(sessionCode)) {
+            User user = userJpa.findByUserMobilephoneNum(phone);
+            if (user != null) {
+                return login(phone, user.getUserPassword());
+            }
+            return new JsonObjectResult(ResultCode.PARAMS_ERROR, "没有找到您的账户信息，请核对账号是否正确");
+        } else {
+            return new JsonObjectResult(ResultCode.SUCCESS, "登录失败");
+        }
     }
 
     @PostMapping("/sendCode")
-    public Object sendCod(String phoneNum) {
-        SendSmsResponse response = PhoneSend.sendCode(phoneNum);
-        if (response.getCode().equals("200")) return new JsonObjectResult(ResultCode.SUCCESS, response.getMessage());
-        return new JsonObjectResult(ResultCode.EXCEPTION, response.getMessage());
+    @ResponseBody
+    public Object sendCod(String phone) {
+        String code = String.valueOf(new Random().nextInt(899999) + 100000);
+        SendSmsResponse response = PhoneSend.sendIdentifyingCode(phone, code);
+        if (response.getCode().toLowerCase().equals("ok")) {
+            Session session = SecurityUtils.getSubject().getSession();
+            session.setAttribute("code", code);
+            return new JsonObjectResult(ResultCode.SUCCESS, response.getMessage());
+        } else {
+            return new JsonObjectResult(ResultCode.EXCEPTION, response.getMessage());
+        }
     }
 
     @PostMapping("/enrol")
+    @ResponseBody
     public Object enrol(String phone, String reference, String code) {
         Map<String, Object> data = new HashMap<>();
         User user = new User();
@@ -197,6 +213,7 @@ public class LoginController {
     }
 
     @PostMapping("/forgetPassword")
+    @ResponseBody
     public Object forgetPassword(String userName, String oldPassword, String newPassword, String code) {
         Subject subject = SecurityUtils.getSubject();
         UsernamePasswordToken token = null;
@@ -228,6 +245,7 @@ public class LoginController {
     }
 
     @PostMapping("/changePhone")
+    @ResponseBody
     public Object changePhone(String oldPhone, String newPhone, String code) {
         User user = userJpa.findByUserMobilephoneNum(oldPhone);
         if (code != null && code.equals("") && newPhone != null && RegexUtils.checkMobile(newPhone)) {

@@ -9,7 +9,6 @@ import com.school.management.api.repository.StudentJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
 import com.school.management.api.utils.ImgUtils;
-import org.omg.CORBA.OBJ_ADAPTER;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,8 +17,8 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.sql.Date;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/school/homework")
@@ -38,9 +37,11 @@ public class HomeWorkController {
     public Object all(String classCode) {
         Gson gson = new Gson();
         String json = gson.toJson(workJpa.findByClassCode(Integer.parseInt(classCode)));
-        List<Map<String, Object>> datas = gson.fromJson(json, new TypeToken<List<Map<String, Object>>>(){}.getType());
+        List<Map<String, Object>> datas = gson.fromJson(json, new TypeToken<List<Map<String, Object>>>() {
+        }.getType());
         for (Map<String, Object> data : datas) {
-            data.put("workPhotos", gson.fromJson(data.get("workPhotos").toString(), new TypeToken<List<String>>(){}.getType()));
+            data.put("workPhotos", gson.fromJson(data.get("workPhotos").toString(), new TypeToken<List<String>>() {
+            }.getType()));
         }
         return new JsonObjectResult(ResultCode.SUCCESS, "", datas);
     }

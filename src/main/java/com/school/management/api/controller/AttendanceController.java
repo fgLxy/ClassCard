@@ -1,16 +1,18 @@
 package com.school.management.api.controller;
 
-import com.google.gson.Gson;
 import com.school.management.api.entity.Attendance;
 import com.school.management.api.entity.Student;
 import com.school.management.api.repository.AttendanceJpaRepository;
+import com.school.management.api.repository.ClassJpaRepository;
 import com.school.management.api.repository.StudentJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
+import com.school.management.api.utils.ImgUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -28,9 +30,12 @@ public class AttendanceController {
     @Autowired
     private StudentJpaRepository studentJpa;
 
+    @Autowired
+    private ClassJpaRepository classJpa;
+
     @PostMapping("/addAttendance")
     public Object addAttendance(String cardNum, String time, String classCode) {
-       SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss");
         String day = new SimpleDateFormat("yyyy-MM-dd").format(new Date(System.currentTimeMillis()));
         Map<String, Object> data = new HashMap<>();
         Attendance attendance = attendanceJpaRepository.findByStudentNum(cardNum);
@@ -103,8 +108,8 @@ public class AttendanceController {
      * @return 显示所有考勤
      */
     @GetMapping("/list")
-    public Object listAll(@RequestParam(defaultValue = "1") int page) {
-        return new JsonObjectResult(ResultCode.SUCCESS, "获取数据成功", attendanceJpaRepository.findAll(PageRequest.of(page - 1, 8)));
+    public Object listAll(@RequestParam(defaultValue = "1") int page, String className) {
+        return new JsonObjectResult(ResultCode.SUCCESS, "获取数据成功", attendanceJpaRepository.findByClassCode(classJpa.findByClassName(className).getClassroomCode(), PageRequest.of(page - 1, 8)));
     }
 
     @PostMapping("/delete")
@@ -132,7 +137,13 @@ public class AttendanceController {
             Student student = studentJpa.findByStudentName(attendance.getAttendanceStudentName());
             if (student != null) {
                 attendance.setStudentNum(student.getStudentCardNum());
-                return new JsonObjectResult(ResultCode.SUCCESS, "增加成功", attendanceJpaRepository.saveAndFlush(attendance));
+                try {
+                    attendance.setPhotoUrl(ImgUtils.base64ToImg(attendance.getPhotoUrl(), attendance.getAttendanceStudentName(), "attendance"));
+                    attendance.setClassCode(classJpa.findByClassName(student.getStudentClassroom()).getClassroomCode());
+                    return new JsonObjectResult(ResultCode.SUCCESS, "增加成功", attendanceJpaRepository.saveAndFlush(attendance));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             } else {
                 return new JsonObjectResult(ResultCode.PARAMS_ERROR, "找不到学生信息，请核对后重试");
             }
@@ -142,10 +153,15 @@ public class AttendanceController {
 
     @RequestMapping("/update")
     public Object update(Attendance attendance) {
-        System.out.println(new Gson().toJson(attendance));
         Attendance old = attendanceJpaRepository.findByAttendanceStudentId(attendance.getAttendanceStudentId());
         if (old != null) {
             try {
+                String photoUrl = attendance.getPhotoUrl();
+                System.out.println(photoUrl);
+                if (photoUrl.startsWith("data")) {
+                    String img = photoUrl.split(",")[1];
+                    attendance.setPhotoUrl(ImgUtils.base64ToImg(img, attendance.getStudentNum() + ".jpg", "attendance"));
+                }
                 return new JsonObjectResult(ResultCode.SUCCESS, "修改成功", attendanceJpaRepository.saveAndFlush(attendance));
             } catch (Exception e) {
                 return new JsonObjectResult(ResultCode.PARAMS_ERROR, "未找到" + attendance.getAttendanceStudentName() + "学生信息");
@@ -156,12 +172,12 @@ public class AttendanceController {
     }
 
     @PostMapping("/query")
-    public Object query(String date) {
-        return new JsonObjectResult(ResultCode.SUCCESS, "", attendanceJpaRepository.findByStudentNum(studentJpa.findByStudentName(date).getStudentCardNum()));
+    public Object query(String date, String className) {
+        return new JsonObjectResult(ResultCode.SUCCESS, "", attendanceJpaRepository.findByStudentNum(studentJpa.findByStudentNameAndStudentClassroom(date, className).getStudentCardNum()));
     }
 
     @PostMapping("/all")
-    public Object all (int classCode) {
+    public Object all(int classCode) {
         return new JsonObjectResult(ResultCode.SUCCESS, "", attendanceJpaRepository.findByClassCode(classCode));
     }
 }

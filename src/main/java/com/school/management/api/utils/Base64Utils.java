@@ -7,13 +7,13 @@ import java.io.*;
 
 public class Base64Utils {
     //图片转化成base64字符串
-    public static String GetImageStr(String imageName){
+    public static String GetImageStr(String imageName) {
         //将图片文件转化为字节数组字符串，并对其进行base64编码除理
         String imgFile = imageName; //待处理的图片
         InputStream in = null;
         byte[] data = null;
         //读取图片字节数组
-        try{
+        try {
             in = new FileInputStream(imgFile);
             data = new byte[in.available()];
             in.read(data);
@@ -29,19 +29,19 @@ public class Base64Utils {
     }
 
     //base64字符串转化成图片
-    public static boolean GenerateImage(String imgStr, String imageName){
+    public static boolean GenerateImage(String imgStr, String imageName) {
         //对字节数组字符串进行base64解码并生成图片
-        if(imgStr == null){ //图像数据为空
+        if (imgStr == null) { //图像数据为空
             return false;
         }
         BASE64Decoder decoder = new BASE64Decoder();
         try {
             //base64解码
             byte[] b = decoder.decodeBuffer(imgStr);
-            for (int i=0; i<b.length; i++){
-                if(b[i]<0){
+            for (int i = 0; i < b.length; i++) {
+                if (b[i] < 0) {
                     //调整异常数据
-                    b[i]+=256;
+                    b[i] += 256;
                 }
             }
             //生成jpeg图片

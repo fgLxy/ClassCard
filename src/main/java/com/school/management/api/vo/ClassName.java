@@ -8,6 +8,8 @@ public class ClassName {
 
     private int classCode;
 
+    private String classPhoto;
+
     @Override
     public String toString() {
         return "ClassName{" +
@@ -38,5 +40,13 @@ public class ClassName {
 
     public void setClassName(String className) {
         this.className = className;
+    }
+
+    public String getClassPhoto() {
+        return classPhoto;
+    }
+
+    public void setClassPhoto(String classPhoto) {
+        this.classPhoto = classPhoto;
     }
 }

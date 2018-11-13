@@ -14,11 +14,11 @@ import com.school.management.api.vo.CourseWeek;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -37,6 +37,8 @@ public class ScheduleController {
 
     @Autowired
     private CourseJpaRepository courseJpa;
+
+    private static final String[] WEEK = new String[]{"星期一", "星期二", "星期三", "星期四", "星期五"};
 
     /**
      * @param className 班级名称
@@ -88,9 +90,8 @@ public class ScheduleController {
             } else {
                 list = new ArrayList<>();
                 list.add(week.getWeekCourse());
-                map.put(week.getWeekDay(), null);
+                map.put(week.getWeekDay(), list);
             }
-
         }
 
         List<CourseWeek> courseWeeks = new ArrayList<>();
@@ -105,8 +106,8 @@ public class ScheduleController {
     }
 
     @GetMapping("/list")
-    public Object list() {
-        return showWeek(1);
+    public Object list(int classCode) {
+        return showWeek(classCode);
     }
 
     @GetMapping("/listCourse")
@@ -121,13 +122,24 @@ public class ScheduleController {
         List<ScheduleWeek> scheduleWeeks = weekJpa.findByClassCode(classCode);
         for (int j = 0; j < scheduleWeeks.size(); j++) {
             ScheduleWeek scheduleWeek = scheduleWeeks.get(j);
-            for (int i = 0; i < courseWeeksList.size(); i++) {
-                CourseWeek courseWeek = courseWeeksList.get(i);
+            for (CourseWeek courseWeek : courseWeeksList) {
                 if (Integer.parseInt(scheduleWeek.getWeekDay()) == courseWeek.getState()) {
                     scheduleWeek.setWeekCourse(courseWeek.getCourses().get(j % 10));
                 }
             }
             weekJpa.saveAndFlush(scheduleWeek);
+        }
+        if (scheduleWeeks.isEmpty()) {
+            ScheduleWeek scheduleWeek = new ScheduleWeek();
+            for (CourseWeek courseWeek : courseWeeksList) {
+                for (int j = 0; j < courseWeek.getCourses().size(); j++) {
+                    scheduleWeek.setWeekCourse(courseWeek.getCourses().get(j));
+                    scheduleWeek.setWeekDay(String.valueOf(courseWeek.getState()));
+                    scheduleWeek.setClassCode(classCode);
+                    scheduleWeek.setWeekId(weekJpa.findAll().get(weekJpa.findAll().size()-1).getWeekId()+1);
+                    System.out.println(weekJpa.save(scheduleWeek));
+                }
+            }
         }
         return new JsonObjectResult(ResultCode.SUCCESS, "");
     }

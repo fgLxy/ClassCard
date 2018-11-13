@@ -9,10 +9,10 @@ import com.school.management.api.results.ResultCode;
 import com.school.management.api.utils.ImgUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.session.Session;
-import org.omg.CORBA.OBJ_ADAPTER;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
@@ -73,8 +73,14 @@ public class NewsController {
 
     @PostMapping("/list")
     public Object list(@RequestParam(defaultValue = "") String date, @RequestParam(defaultValue = "1") int page) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         if (date != null && !date.equals("") && !date.equals("undefind")) {
-            return new JsonObjectResult(ResultCode.SUCCESS, "", newsJpaRepository.findByPublishDateLike(date + "%", PageRequest.of(page - 1, 8)));
+            Page<News> newsPage = newsJpaRepository.findByPublishDateLike(date + "%", PageRequest.of(page - 1, 8));
+            for (News news : newsPage) {
+                Date date1 = new Date(Long.parseLong(news.getPublishDate()));
+                news.setPublishDate(sdf.format(date1));
+            }
+            return new JsonObjectResult(ResultCode.SUCCESS, "", newsPage);
         }
         return new JsonObjectResult(ResultCode.PARAMS_ERROR, "获取数据成功", newsJpaRepository.findAll(PageRequest.of(page - 1, 8)));
     }

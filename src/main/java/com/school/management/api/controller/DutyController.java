@@ -1,8 +1,10 @@
 package com.school.management.api.controller;
 
-import com.google.gson.Gson;
 import com.school.management.api.entity.DutyDay;
+import com.school.management.api.entity.Student;
+import com.school.management.api.repository.ClassJpaRepository;
 import com.school.management.api.repository.DutyDayJpaRepository;
+import com.school.management.api.repository.StudentJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
 import com.school.management.api.vo.ClassDuty;
@@ -27,6 +29,12 @@ public class DutyController {
     @Autowired
     private DutyDayJpaRepository jpa;
 
+    @Autowired
+    private StudentJpaRepository studentJpa;
+
+    @Autowired
+    private ClassJpaRepository classJpa;
+
     /**
      * @param classCode 班级编号
      * @return 该班级的值日表 {@link com.school.management.api.entity.DutyDay}
@@ -43,7 +51,7 @@ public class DutyController {
             } else {
                 list = new ArrayList<>();
                 list.add(dutyDay.getDutyStudentName());
-                map.put(dutyDay.getDutyDay(), null);
+                map.put(dutyDay.getDutyDay(), list);
             }
         }
 
@@ -59,8 +67,8 @@ public class DutyController {
     }
 
     @GetMapping("/list")
-    public Object list(@RequestParam(value = "page", defaultValue = "1") int page) {
-        return new JsonObjectResult(ResultCode.SUCCESS, "获取数据成功", jpa.findAll(PageRequest.of(page - 1, 8)));
+    public Object list(@RequestParam(value = "page", defaultValue = "1") int page, String classCode) {
+        return new JsonObjectResult(ResultCode.SUCCESS, "获取数据成功", jpa.findByClassRoomCode(Integer.parseInt(classCode), PageRequest.of(page - 1, 8, new Sort(Sort.Direction.ASC, "dutyDay"))));
     }
 
     @PostMapping("/delete")
@@ -93,17 +101,19 @@ public class DutyController {
 
     @PostMapping("/update")
     public Object updateExam(DutyDay dutyDay) {
-        System.out.println(new Gson().toJson(dutyDay));
         DutyDay old = jpa.findByDutyId(dutyDay.getDutyId());
         if (old != null) {
-            return new JsonObjectResult(ResultCode.SUCCESS, "修改成功", jpa.saveAndFlush(dutyDay));
+            Student student = studentJpa.findByStudentNameAndStudentClassroom(dutyDay.getDutyStudentName(), classJpa.getNameByClassCode(dutyDay.getClassRoomCode()));
+            if (student != null)
+                return new JsonObjectResult(ResultCode.SUCCESS, "修改成功", jpa.saveAndFlush(dutyDay));
+            else
+                return new JsonObjectResult(ResultCode.PARAMS_ERROR, "该班级下没有这个学生");
         }
         return new JsonObjectResult(ResultCode.PARAMS_ERROR, "没有找到待修改的数据");
     }
 
     @PostMapping("/query")
-    public Object query(String date) {
-        System.out.println(date);
-        return new JsonObjectResult(ResultCode.SUCCESS, "", jpa.findByDutyStudentName(date));
+    public Object query(String date, String classCode, @RequestParam(value = "page", defaultValue = "1") int page) {
+        return new JsonObjectResult(ResultCode.SUCCESS, "", jpa.findByDutyDayAndClassRoomCode(date, Integer.parseInt(classCode), PageRequest.of(page - 1, 8)));
     }
 }

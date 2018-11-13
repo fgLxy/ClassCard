@@ -3,7 +3,6 @@ package com.school.management.api.controller;
 
 import com.google.gson.Gson;
 import com.school.management.api.entity.Exam;
-import com.school.management.api.entity.Ip;
 import com.school.management.api.entity.Teacher;
 import com.school.management.api.netty.NettyChannelHandlerPool;
 import com.school.management.api.netty.NettyServerHandler;
@@ -89,6 +88,17 @@ public class ExamController extends NettyServerHandler {
                     return new JsonObjectResult(ResultCode.PARAMS_ERROR, "找不到监考老师的信息，请核对后重试。");
                 }
             }
+            int hasClass = classJpa.hasClass(exam.getExamPlace());
+            if (hasClass <= 0) {
+                return new JsonObjectResult(ResultCode.PARAMS_ERROR, "本校没有这个考试地点：" + exam.getExamPlace());
+            }
+            try {
+                if (checkExam(exam)) {
+                    return new JsonObjectResult(ResultCode.PARAMS_ERROR, "您添加的考试不符合规则");
+                }
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
             datas.put("examTeacher", teacherNames);
             datas.put("examTime", startTime.substring(startTime.indexOf(" ") + 1) + "-" + endTime.substring(startTime.indexOf(" ") + 1));
             datas.put("examCourse", exam.getExamSubject());
@@ -97,21 +107,11 @@ public class ExamController extends NettyServerHandler {
             map.put("data", datas);
             map.put("message", "处理数据成功");
             for (String ip : IpList) {
-                System.out.println();
-                System.out.println(ip);
-                System.out.println();
                 Channel channel = NettyChannelHandlerPool.channelGroup.find((ChannelId) nettyMap.get(ip));
                 if (channel != null) {
-                    System.out.println();
-                    System.out.println(new Gson().toJson(map));
-                    System.out.println();
                     ChannelFuture future = channel.writeAndFlush(new Gson().toJson(map));
-                    System.out.println();
-                    System.out.println(future.isDone());
-                    System.out.println();
                 }
             }
-//            this.sendAll(this.ctx, new Gson().toJson(map));
             String teacheres = Arrays.toString(teacherNames);
             exam.setTeacherId(teacheres.substring(1, teacheres.length() - 1));
             return new JsonObjectResult(ResultCode.SUCCESS, "添加数据成功", examJpa.save(exam));
@@ -149,8 +149,8 @@ public class ExamController extends NettyServerHandler {
     }
 
     @PostMapping("/query")
-    public Object query(String date) {
-        return new JsonObjectResult(ResultCode.SUCCESS, "查询数据成功", examJpa.findByExamDateLike(date + "%"));
+    public Object query(String date, @RequestParam(defaultValue = "1") int page) {
+        return new JsonObjectResult(ResultCode.SUCCESS, "查询数据成功", examJpa.findByExamDateLike(date + "%", PageRequest.of(page-1, 8)));
     }
 
     @PostMapping("/nearlingExam")
@@ -167,5 +167,22 @@ public class ExamController extends NettyServerHandler {
             }
         }
         return new JsonObjectResult(ResultCode.SUCCESS, "最近无考试安排");
+    }
+
+    private boolean checkExam(Exam exam) throws ParseException {
+        List<Exam> examList = examJpa.findByExamRoom(exam.getExamRoom());
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        long addedEndTime = sdf.parse(exam.getExamEndTime()).getTime();
+        long addedStartTime = sdf.parse(exam.getExamStartTime()).getTime();
+        for (Exam e : examList) {
+            long endTime = sdf.parse(e.getExamEndTime()).getTime();
+            long startTime = sdf.parse(e.getExamStartTime()).getTime();
+            if (addedEndTime < startTime && startTime < addedStartTime) {
+                return false;
+            } else if (addedStartTime < endTime && endTime < addedEndTime) {
+                return false;
+            }
+        }
+        return true;
     }
 }

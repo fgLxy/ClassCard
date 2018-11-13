@@ -52,6 +52,9 @@ public class Class implements Serializable {
     @Column(name = "class_score")
     private int classScore;
 
+    @Column(name = "class_badge")
+    private String classBadge;
+
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "class_room_code", referencedColumnName = "class_room_code", insertable = false, updatable = false)
     private Set<Album> albums;
@@ -115,6 +118,22 @@ public class Class implements Serializable {
 
     public void setSchedules(Set<Schedule> schedules) {
         this.schedules = schedules;
+    }
+
+    public String getClassBadge() {
+        return classBadge;
+    }
+
+    public void setClassBadge(String classBadge) {
+        this.classBadge = classBadge;
+    }
+
+    public Set<Album> getAlbums() {
+        return albums;
+    }
+
+    public void setAlbums(Set<Album> albums) {
+        this.albums = albums;
     }
 
     public String getClassStudentTotal() {

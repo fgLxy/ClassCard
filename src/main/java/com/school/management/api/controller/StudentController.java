@@ -2,24 +2,21 @@ package com.school.management.api.controller;
 
 import com.google.gson.Gson;
 import com.school.management.api.entity.Student;
-import com.school.management.api.entity.Teacher;
 import com.school.management.api.repository.StudentJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
 import com.school.management.api.utils.FileUtils;
+import com.school.management.api.utils.ImgUtils;
 import com.school.management.api.utils.RegexUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Iterator;
+import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 @RestController
 @RequestMapping(value = "/school/class")
@@ -33,7 +30,6 @@ public class StudentController {
     @PostMapping(value = "/getStudentInfo")
     public Object getStudent(@RequestParam("card_code") int cardNum) {
         String cardCodeStr = String.valueOf(cardNum);
-
         if (cardNum != 0 && RegexUtils.checkIntegerPos(cardCodeStr)) {
             return new JsonObjectResult(ResultCode.SUCCESS, "获取数据成功", studentJpa.getStudentByStudentCardNum(String.valueOf(cardNum)));
         } else {
@@ -111,13 +107,12 @@ public class StudentController {
     }
 
     @PostMapping("/student/upload")
-    public Object upload(HttpServletRequest request) {
-        System.out.println("come in");
-//        for (Object key : request.getParameterMap().keySet()) {
-//            System.out.println();
-//            System.out.println(key + "\t:\t" + request.getParameter(key.toString()));
-//            System.out.println();
-//        }
+    public Object upload(String file, String fileName, HttpServletRequest request) {
+        try {
+            ImgUtils.base64ToFile(file.split(",")[1], fileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return new JsonObjectResult(ResultCode.SUCCESS, "");
     }
 }

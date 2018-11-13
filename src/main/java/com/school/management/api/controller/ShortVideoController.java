@@ -1,8 +1,6 @@
 package com.school.management.api.controller;
 
-import com.school.management.api.entity.MicroVideo;
 import com.school.management.api.entity.ShortVideo;
-import com.school.management.api.repository.MicroVideoJpaRepository;
 import com.school.management.api.repository.ShortVideoJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;

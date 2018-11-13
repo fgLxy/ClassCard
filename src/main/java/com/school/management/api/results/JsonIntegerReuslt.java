@@ -21,7 +21,7 @@ public class JsonIntegerReuslt {
         this.setMessage(message);
     }
 
-    public JsonIntegerReuslt(ResultCode code, String message,int data) {
+    public JsonIntegerReuslt(ResultCode code, String message, int data) {
         this.setCode(code);
         this.setMessage(message);
         this.setData(data);
@@ -30,12 +30,15 @@ public class JsonIntegerReuslt {
     public String getCode() {
         return code;
     }
+
     public void setCode(ResultCode code) {
         this.code = code.val();
     }
+
     public String getMessage() {
         return message;
     }
+
     public void setMessage(String message) {
         this.message = message;
     }

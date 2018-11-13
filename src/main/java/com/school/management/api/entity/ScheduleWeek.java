@@ -14,9 +14,9 @@ public class ScheduleWeek implements Serializable {
      */
     @Id
     @Column(name = "schedule_week_id")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "check_result_id_seq")
-    @SequenceGenerator(name = "check_result_id_seq", sequenceName = "check_result_id_seq", allocationSize = 1)
-    private String weekId;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+//    @SequenceGenerator(name = "check_result_id_seq", sequenceName = "check_result_id_seq", allocationSize = 1)
+    private int weekId;
 
     /**
      * 本周星期几
@@ -80,11 +80,11 @@ public class ScheduleWeek implements Serializable {
         return Objects.hash(weekId, weekDay, weekDate, weekCourse);
     }
 
-    public String getWeekId() {
+    public int getWeekId() {
         return weekId;
     }
 
-    public void setWeekId(String weekId) {
+    public void setWeekId(int weekId) {
         this.weekId = weekId;
     }
 

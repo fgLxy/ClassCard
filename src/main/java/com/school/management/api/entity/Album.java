@@ -12,8 +12,7 @@ import java.util.Objects;
 public class Album implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "check_result_id_seq")
-    @SequenceGenerator(name = "check_result_id_seq", sequenceName = "check_result_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "album_id", nullable = false)
     private Long id;
 

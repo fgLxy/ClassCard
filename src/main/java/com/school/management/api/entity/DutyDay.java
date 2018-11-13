@@ -92,6 +92,14 @@ public class DutyDay implements Serializable {
         this.dutyDay = dutyDay;
     }
 
+    public int getClassRoomCode() {
+        return classRoomCode;
+    }
+
+    public void setClassRoomCode(int classRoomCode) {
+        this.classRoomCode = classRoomCode;
+    }
+
     @Override
     public String toString() {
         return "DutyDay{" +

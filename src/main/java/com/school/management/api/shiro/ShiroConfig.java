@@ -1,10 +1,6 @@
 package com.school.management.api.shiro;
 
-import net.sf.ehcache.CacheManager;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
-import org.apache.shiro.cache.CacheException;
-import org.apache.shiro.cache.ehcache.EhCacheManager;
-import org.apache.shiro.io.ResourceUtils;
 import org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO;
 import org.apache.shiro.spring.LifecycleBeanPostProcessor;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
@@ -17,16 +13,18 @@ import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
-import org.springframework.web.multipart.MultipartResolver;
-import org.springframework.web.multipart.support.StandardServletMultipartResolver;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.web.servlet.DispatcherServlet;
 
 import javax.servlet.Filter;
-import java.io.IOException;
-import java.util.Iterator;
+import javax.servlet.MultipartConfigElement;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -34,6 +32,9 @@ import java.util.Map;
 public class ShiroConfig {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    @Autowired
+    private MultipartConfigElement multipartConfigElement;
 
     /**
      * LifecycleBeanPostProcessor，这是个DestructionAwareBeanPostProcessor的子类，
@@ -230,7 +231,17 @@ public class ShiroConfig {
     }
 
     @Bean
-    public MultipartResolver mulitipartResovler() throws IOException{
-        return new StandardServletMultipartResolver();
+    public ServletRegistrationBean backServlet(WebApplicationContext wac) {
+        DispatcherServlet dispatcherServlet = new DispatcherServlet(wac);
+        AnnotationConfigWebApplicationContext applicationContext = new AnnotationConfigWebApplicationContext();
+        applicationContext.scan("com.school.management.api");
+//        applicationContext.register(BackServletConfig.class);
+        dispatcherServlet.setApplicationContext(applicationContext);
+        ServletRegistrationBean servletRegistrationBean = new ServletRegistrationBean(dispatcherServlet, "/api/*");
+        servletRegistrationBean.setLoadOnStartup(1);
+        servletRegistrationBean.setMultipartConfig(multipartConfigElement);
+        servletRegistrationBean.setName("ApiServlet");
+        return servletRegistrationBean;
     }
+
 }

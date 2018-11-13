@@ -1,6 +1,7 @@
 package com.school.management.api;
 
-import com.school.management.api.repository.*;
+import com.school.management.api.repository.IpJpaRepository;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,22 +13,10 @@ public class ApiApplicationTests {
 
     @Autowired
     private IpJpaRepository jpa;
-    @Autowired
-    private ClassJpaRepository classJpa;
 
-    @Autowired
-    private StudentJpaRepository repository;
-
-    @Autowired
-    private ScheduleWeekJpaRepository weekJpa;
-
-    @Autowired
-    private DutyDayJpaRepository Jpa;
-
-    @Autowired
-    private AlbumJpaRepository albumJpa;
-
-    @Autowired
-    private ExamJpaRepository examJpa;
-
+    @Test
+    public void Object() {
+        System.out.println(jpa.findAll());
+    }
+//
 }

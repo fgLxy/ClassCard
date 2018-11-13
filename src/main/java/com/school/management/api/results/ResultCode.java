@@ -1,34 +1,77 @@
 package com.school.management.api.results;
 
 public enum ResultCode {
-    /** 成功 */
+    /**
+     * 成功
+     */
     SUCCESS("200", "成功"),
 
-    /** 没有登录 */
+    /**
+     * 没有登录
+     */
     NOT_LOGIN("400", "没有登录"),
 
-    /** 发生异常 */
+    /**
+     * 发生异常
+     */
     EXCEPTION("401", "发生异常"),
 
-    /** 系统错误 */
+    /**
+     * 系统错误
+     */
     SYS_ERROR("402", "系统错误"),
 
-    /** 参数错误 */
+    /**
+     * 参数错误
+     */
     PARAMS_ERROR("403", "参数错误 "),
 
-    /** 不支持或已经废弃 */
+    /**
+     * ip错误
+     */
+    IP_ERROR("404", "IP输入错误"),
+
+    /**
+     * 相机编号错误
+     */
+    CAMERA_CODE_ERROR("405", "相机编号输入错误"),
+
+    /**
+     * 相机端口号错误
+     */
+    CAMERA_PORT_ERROR("406", "相机端口号输入错误"),
+
+    /**
+     * 没有数据
+     */
+    NO_DATA("407", "没有数据"),
+
+    /**
+     * 空参数
+     */
+    NOT_PARAM("408", "空的参数"),
+
+    /**
+     * 不支持或已经废弃
+     */
     NOT_SUPPORTED("410", "不支持或已经废弃"),
 
-    /** AuthCode错误 */
+    /**
+     * AuthCode错误
+     */
     INVALID_AUTHCODE("444", "无效的AuthCode"),
 
-    /** 太频繁的调用 */
+    /**
+     * 太频繁的调用
+     */
     TOO_FREQUENT("445", "太频繁的调用"),
 
-    /** 未知的错误 */
+    /**
+     * 未知的错误
+     */
     UNKNOWN_ERROR("499", "未知错误");
 
-    ResultCode(String value, String msg){
+    ResultCode(String value, String msg) {
         this.val = value;
         this.msg = msg;
     }

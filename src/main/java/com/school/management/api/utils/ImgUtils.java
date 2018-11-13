@@ -1,20 +1,16 @@
 package com.school.management.api.utils;
 
-import com.school.management.api.results.JsonObjectResult;
-import com.school.management.api.results.ResultCode;
-import org.apache.catalina.connector.CoyoteInputStream;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.coyote.InputBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
-import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
+import java.net.InetAddress;
 import java.sql.Blob;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -91,13 +87,6 @@ public class ImgUtils {
     }
 
     public static String base64ToImg(String img, String fileName, String imgPath) throws IOException {
-        System.out.println();
-        System.out.println(imgPath);
-        System.out.println();
-        System.out.println(fileName);
-        System.out.println();
-        System.out.println(img);
-        System.out.println();
         OutputStream out = null;
         byte[] bytes = Base64.decodeBase64(img);
         File dir = new File(ROOTPATH + "\\images\\" + imgPath);
@@ -118,7 +107,31 @@ public class ImgUtils {
         out.write(bytes);
         out.flush();
         out.close();
-        return "http://192.168.1.229:8080/images/" + imgPath + "/" + fileName;
+        return "http://" + InetAddress.getLocalHost().getHostAddress() + ":8080/images/" + imgPath + "/" + fileName;
+    }
+
+    public static String base64ToFile(String file, String fileName) throws IOException {
+        OutputStream out = null;
+        byte[] bytes = Base64.decodeBase64(file);
+        File dir = new File(ROOTPATH + "\\file\\");
+        if (!dir.exists()) {
+            dir.mkdir();
+        }
+        File path = new File(dir.getPath() + "\\" + fileName);
+        if (!path.exists()) {
+            path.getParentFile().mkdir();
+        }
+        path.createNewFile();
+        for (int i = 0; i < bytes.length; ++i) {
+            if (bytes[i] < 0) {// 调整异常数据
+                bytes[i] += 256;
+            }
+        }
+        out = new FileOutputStream(path);
+        out.write(bytes);
+        out.flush();
+        out.close();
+        return "http://" + InetAddress.getLocalHost().getHostAddress() + ":8080/files/" + fileName;
     }
 
     public static void filesToImg(String photos) throws Exception {
@@ -177,7 +190,7 @@ public class ImgUtils {
                     stream = null;
                     throw e;
                 }
-                fileNameList.add("http://192.168.1.229:8080/" + typePath + "\\" + file.getOriginalFilename());
+                fileNameList.add("http://" + InetAddress.getLocalHost().getHostAddress() + ":8080/" + typePath + "\\" + file.getOriginalFilename());
             } else {
                 throw new Exception("图片内容为空");
             }

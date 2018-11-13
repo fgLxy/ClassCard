@@ -11,9 +11,7 @@ import com.school.management.api.results.ResultCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-import java.sql.Date;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -146,12 +142,13 @@ public class GradeController {
     @PostMapping("/asStudent")
     public Object asStudent(String studentNum, String classCode) {
         try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             if (studentNum != null && classCode == null) {
                 List<Map<String, Object>> datas = new ArrayList<>();
                 for (Map<String, Object> map : gradeJpa.getAllDate()) {
                     Map<String, Object> data = new HashMap<>();
                     List<Grade> gradeSet = gradeJpa.getByStudentIdAndGradeDateLike(Integer.parseInt(studentNum), map.get("grade_date") + "%");
-                    data.put("date", map.get("grade_date"));
+                    data.put("date", sdf.format(map.get("grade_date")));
                     data.put("gradeName", map.get("grade_type"));
                     int count = 0;
                     for (Grade grade : gradeSet) {
@@ -175,7 +172,7 @@ public class GradeController {
                 List<Map<String, Object>> datas = new ArrayList<>();
                 for (Map<String, Object> map : dates) {
                     Map<String, Object> data = new HashMap<>();
-                    data.put("date", map.get("grade_date"));
+                    data.put("date", sdf.format(map.get("grade_date")));
                     data.put("gradeName", map.get("grade_type"));
                     List<Map<String, Object>> classGrade = new ArrayList<>();
                     for (Student student : studentSet) {
@@ -204,22 +201,26 @@ public class GradeController {
     @PostMapping("/showInfo")
     public Object showInfo(String studentNum, String date, HttpServletRequest request) {
         List<Grade> grades = gradeJpa.findByStudentIdAndGradeDate(Integer.parseInt(studentNum), date);
-        Map<String, Object> datas = new HashMap<>();
-        List<Map<String, Object>> gradeInfo = new ArrayList<>();
-        datas.put("headUrl", studentJpa.findByStudentNum(Integer.parseInt(studentNum)).getStudentHeaderUrl());
-        datas.put("gradeName", grades.get(0).getGradeType());
-        int count = 0;
-        for (Grade grade : grades) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("course", grade.getGradeCourse());
-            data.put("sorce", grade.getGradeSorce());
-            data.put("rank", grade.getGradeRank());
-            count += grade.getGradeSorce();
-            gradeInfo.add(data);
+        Map<String, Object> datas = null;
+        if (!grades.isEmpty()) {
+            datas = new HashMap<>();
+            List<Map<String, Object>> gradeInfo = new ArrayList<>();
+            datas.put("headUrl", studentJpa.findByStudentNum(Integer.parseInt(studentNum)).getStudentHeaderUrl());
+            datas.put("gradeName", grades.get(0).getGradeType());
+            int count = 0;
+            for (Grade grade : grades) {
+                Map<String, Object> data = new HashMap<>();
+                data.put("course", grade.getGradeCourse());
+                data.put("sorce", grade.getGradeSorce());
+                data.put("rank", grade.getGradeRank());
+                count += grade.getGradeSorce();
+                gradeInfo.add(data);
+            }
+            datas.put("count", count);
+            datas.put("gradeInfo", gradeInfo);
+            return new JsonObjectResult(ResultCode.SUCCESS, "获取数据成功", datas);
         }
-        datas.put("count", count);
-        datas.put("gradeInfo", gradeInfo);
-        return new JsonObjectResult(ResultCode.SUCCESS, "获取数据成功", datas);
+        return new JsonObjectResult(ResultCode.EXCEPTION, "该学生还没有经历过考试。");
     }
 
     /**
@@ -256,13 +257,19 @@ public class GradeController {
                 Map<String, Object> data = new HashMap<>();
                 String key = it.next();
                 int count = 0;
+                List<Map<String, Object>> courese = new ArrayList<>();
                 for (Grade grade : courseGrade.get(key)) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("course", grade.getGradeCourse());
+                    map.put("score", grade.getGradeSorce());
                     count += grade.getGradeSorce();
+                    courese.add(map);
                 }
                 data.put("date", key);
                 data.put("studentName", student.getStudentName());
                 data.put("count", count);
                 data.put("avg", ((double) count) / ((double) (courseGrade.get(key).size())));
+                data.put("infos", courese);
                 datas.add(data);
             }
             return new JsonObjectResult(ResultCode.SUCCESS, "", datas);
@@ -276,7 +283,7 @@ public class GradeController {
         List<List<Map<String, Object>>> list = new LinkedList<>();
         for (Student student : studentList) {
 //            该班级下每个学生的每次考试的   总分， 平均分， 日期
-            list.add((List<Map<String, Object>>) ((JsonObjectResult)(analysisByStudent(String.valueOf(student.getStudentNum())))).getData());
+            list.add((List<Map<String, Object>>) ((JsonObjectResult) (analysisByStudent(String.valueOf(student.getStudentNum())))).getData());
         }
         return new JsonObjectResult(ResultCode.SUCCESS, "", list);
     }

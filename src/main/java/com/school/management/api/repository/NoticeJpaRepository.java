@@ -3,6 +3,8 @@ package com.school.management.api.repository;
 import com.school.management.api.entity.Notice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import javax.transaction.Transactional;
 import java.util.List;
@@ -22,4 +24,6 @@ public interface NoticeJpaRepository extends JpaRepository<Notice, Long> {
      * @return 根据日期查询得到的部分通知
      */
     List<Notice> findByNoticeTimeLike(String time);
+
+    Page<Notice> findByNoticeTimeLike(String time, Pageable pageable);
 }

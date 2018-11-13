@@ -2,6 +2,8 @@ package com.school.management.api.repository;
 
 import com.school.management.api.entity.Exam;
 import com.school.management.api.entity.Grade;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -21,4 +23,6 @@ public interface ExamJpaRepository extends JpaRepository<Exam, Long> {
     Exam findByExamId(long examId);
 
     List<Exam> findByExamDateLike(String date);
+
+    Page<Exam> findByExamDateLike(String date, Pageable pageable);
 }

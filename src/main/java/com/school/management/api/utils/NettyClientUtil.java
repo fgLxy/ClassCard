@@ -36,7 +36,7 @@ public class NettyClientUtil {
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.channel(NioSocketChannel.class);
         bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
-        bootstrap.option(ChannelOption.SO_BACKLOG,10*1024*1024);
+        bootstrap.option(ChannelOption.SO_BACKLOG, 10 * 1024 * 1024);
         bootstrap.group(eventLoopGroup);
         bootstrap.remoteAddress(host, port);
         bootstrap.handler(new ChannelInitializer<SocketChannel>() {

@@ -28,7 +28,7 @@ public class NettyServer {
      *
      * @param port 端口号
      */
-    public static void start(int port) {
+    public static ChannelFuture start(int port) {
 
         // 通过nio方式来接收连接和处理连接
         EventLoopGroup boss = new NioEventLoopGroup();
@@ -54,7 +54,7 @@ public class NettyServer {
              * CloseFuture异步方式关闭
              */
             channel.closeFuture().sync();
-
+            return channelFuture;
         } catch (InterruptedException e) {
             logger.warn("服务器出现异常", e);
         } finally {
@@ -62,6 +62,7 @@ public class NettyServer {
             boss.shutdownGracefully();
             worker.shutdownGracefully();
         }
+        return null;
     }
 
 

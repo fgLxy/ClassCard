@@ -35,13 +35,13 @@ public class Student implements Serializable {
     /**
      * 学生年龄
      */
-    @Column(name = "student_age", nullable = false)
+    @Column(name = "student_age")
     private int studentAge;
 
     /**
      * 学生性别, 0为男性，1为女性
      */
-    @Column(name = "student_sex", nullable = false)
+    @Column(name = "student_sex")
     private int studentSex;
 
     /**
@@ -53,7 +53,7 @@ public class Student implements Serializable {
     /**
      * 学分总分
      */
-    @Column(name = "student_total_credit", nullable = false)
+    @Column(name = "student_total_credit")
     private int studentTotalCredit;
 
     /**
@@ -65,7 +65,7 @@ public class Student implements Serializable {
     /**
      * 学生头像
      */
-    @Column(name = "student_header_url", nullable = false)
+    @Column(name = "student_header_url")
     private String studentHeaderUrl;
 
     /**
@@ -89,31 +89,31 @@ public class Student implements Serializable {
     /**
      * 学生生日
      */
-    @Column(name = "birthday", nullable = false)
+    @Column(name = "birthday")
     private String birthday;
 
     /**
      * 入学时间
      */
-    @Column(name = "matriculation_time", nullable = false)
+    @Column(name = "matriculation_time")
     private String matriculationTime;
 
     /**
      * 毕业时间
      */
-    @Column(name = "graduation_time", nullable = false)
+    @Column(name = "graduation_time")
     private String graduationTime;
 
     /**
      * 户籍
      */
-    @Column(name = "household_registration", nullable = false)
+    @Column(name = "household_registration")
     private String householdRegistration;
 
     /**
      * 户口（1——城镇；2——农村）
      */
-    @Column(name = "account", nullable = false)
+    @Column(name = "account")
     private String account;
 
     /**
@@ -279,8 +279,14 @@ public class Student implements Serializable {
                 ", studentTotalCredit=" + studentTotalCredit +
                 ", studentDutyDayState=" + studentDutyDayState +
                 ", studentHeaderUrl='" + studentHeaderUrl + '\'' +
-                ", studentCardCode=" + studentCardNum +
-                ", studentCode=" + studentNum +
+                ", studentCardNum='" + studentCardNum + '\'' +
+                ", studentNum=" + studentNum +
+                ", userID=" + userID +
+                ", birthday='" + birthday + '\'' +
+                ", matriculationTime='" + matriculationTime + '\'' +
+                ", graduationTime='" + graduationTime + '\'' +
+                ", householdRegistration='" + householdRegistration + '\'' +
+                ", account='" + account + '\'' +
                 '}';
     }
 

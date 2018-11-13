@@ -106,10 +106,13 @@ public class AlbumController {
      * Put请求
      */
     @PostMapping(value = "/updateAlbum")
-    public Object upDateAlbum(Album album) {
+    public Object upDateAlbum(Album album, String fileName, HttpServletRequest request) {
         Album old = albumJpaRepository.getAlbumById(album.getId());
         if (old != null) {
             try {
+                String oldPhoto = old.getPhotoUrl();
+                if (!oldPhoto.equals(album.getPhotoUrl()))
+                album.setPhotoUrl(ImgUtils.base64ToImg(album.getPhotoUrl(), fileName, "album"));
                 return new JsonObjectResult(ResultCode.SUCCESS, "更新数据成功", albumJpaRepository.saveAndFlush(album));
             } catch (Exception e) {
                 return new JsonObjectResult(ResultCode.PARAMS_ERROR, "更新数据失败" + e.getMessage());
@@ -144,8 +147,7 @@ public class AlbumController {
     }
 
     @PostMapping("/query")
-    public Object query(String date) {
-        System.out.println(date);
-        return new JsonObjectResult(ResultCode.SUCCESS, "", albumJpaRepository.findByAddedDateLike(date + "%"));
+    public Object query(String date, @RequestParam(name = "page") int page) {
+        return new JsonObjectResult(ResultCode.SUCCESS, "", albumJpaRepository.findByAddedDateLike(date + "%", PageRequest.of(page - 1, 8)));
     }
 }

@@ -19,13 +19,24 @@ import com.school.management.api.utils.FileUtils;
 import com.school.management.api.utils.ImgUtils;
 import org.apache.shiro.crypto.SecureRandomNumberGenerator;
 import org.apache.shiro.crypto.hash.SimpleHash;
+import org.springframework.util.ResourceUtils;
 import redis.clients.jedis.Jedis;
 
+import java.beans.IntrospectionException;
+import java.beans.PropertyDescriptor;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class Test {
 
@@ -89,7 +100,8 @@ public class Test {
         String str = "data: [{quantifyId: 3,quantifyType: 3,quantifyRemark: 早操无故不到,quantifyPhotoUrl: http://a.hiphotos.baidu.com/image/pic/item/b64543a98226cffceee78e5eb5014a90f703ea09.jpg,quantifyPhotoUrl2: http://a.hiphotos.baidu.com/image/pic/item/b64543a98226cffceee78e5eb5014a90f703ea09.jpg,quantifyPhotoUrl3: http://a.hiphotos.baidu.com/image/pic/item/b64543a98226cffceee78e5eb5014a90f703ea09.jpg,quantifyPhotoUrl4: null,quantifyPhotoUrl5: null,quantifyPhotoUrl6: null,quantifyPhotoUrl7: null,quantifyPhotoUrl8: null,quantifyPhotoUrl9: null,classId: 1,quantifyUser: 小红,quantifyDate: 2018-09-17}, { quantifyId: 2, quantifyType: 2, quantifyRemark: 大声吵闹, quantifyPhotoUrl: http://d.hiphotos.baidu.com/image/pic/item/bba1cd11728b4710f294b823cfcec3fdfd0323a1.jpg, quantifyPhotoUrl2: http://d.hiphotos.baidu.com/image/pic/item/bba1cd11728b4710f294b823cfcec3fdfd0323a1.jpg, quantifyPhotoUrl3: http://d.hiphotos.baidu.com/image/pic/item/bba1cd11728b4710f294b823cfcec3fdfd0323a1.jpg, quantifyPhotoUrl4: null, quantifyPhotoUrl5: null, quantifyPhotoUrl6: null, quantifyPhotoUrl7: null, quantifyPhotoUrl8: null, quantifyPhotoUrl9: null, classId: 1, quantifyUser: 小红, quantifyDate: 2018-09-17 }, { quantifyId: 1, quantifyType: 1, quantifyRemark: 地上有纸屑，角落未打扫干净，窗台有灰, quantifyPhotoUrl: http://a.hiphotos.baidu.com/image/pic/item/b64543a98226cffceee78e5eb5014a90f703ea09.jpg, quantifyPhotoUrl2: http://a.hiphotos.baidu.com/image/pic/item/b64543a98226cffceee78e5eb5014a90f703ea09.jpg, quantifyPhotoUrl3: http://a.hiphotos.baidu.com/image/pic/item/b64543a98226cffceee78e5eb5014a90f703ea09.jpg, quantifyPhotoUrl4: null, quantifyPhotoUrl5: null, quantifyPhotoUrl6: null, quantifyPhotoUrl7: null, quantifyPhotoUrl8: null, quantifyPhotoUrl9: null, classId: 1, quantifyUser: 小红, quantifyDate: 2018-09-17 }, { quantifyId: 10, quantifyType: 1, quantifyRemark: 角落没打扫干净, quantifyPhotoUrl: http://a.hiphotos.baidu.com/image/pic/item/b64543a98226cffceee78e5eb5014a90f703ea09.jpg, quantifyPhotoUrl2: http://a.hiphotos.baidu.com/image/pic/item/b64543a98226cffceee78e5eb5014a90f703ea09.jpg, quantifyPhotoUrl3: http://a.hiphotos.baidu.com/image/pic/item/b64543a98226cffceee78e5eb5014a90f703ea09.jpg, quantifyPhotoUrl4: null, quantifyPhotoUrl5: null, quantifyPhotoUrl6: null, quantifyPhotoUrl7: null, quantifyPhotoUrl8: null, quantifyPhotoUrl9: null, classId: 1, quantifyUser: 小红, quantifyDate: 2018-09-17}]";
 
 
-        List<Map<Object, Object>> data = new Gson().fromJson(new Gson().toJson(str), new TypeToken<List<Map<Object, Object>>>(){}.getType());
+        List<Map<Object, Object>> data = new Gson().fromJson(new Gson().toJson(str), new TypeToken<List<Map<Object, Object>>>() {
+        }.getType());
         List<Map<String, Object>> result = new ArrayList<>();
 
         System.out.println(new Gson().toJson(str));
@@ -97,9 +109,17 @@ public class Test {
 
     }
 
+    private static int count = 0;
+
+
     public static void main(String[] args) {
-
-        Method[] methods = ClassUtils.getSetPhoto(Comment.class);
-
+        try {
+            count++;
+            main(args);
+            System.out.println();
+            System.out.println(count);
+            System.out.println();
+        } catch (Exception e) {
+        }
     }
 }

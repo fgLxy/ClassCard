@@ -1,7 +1,6 @@
 package com.school.management.api.controller;
 
 
-import com.google.gson.Gson;
 import com.school.management.api.entity.FoodMenu;
 import com.school.management.api.repository.FoodMenuJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
@@ -14,8 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -125,7 +122,7 @@ public class FoodMenuController {
             return new JsonObjectResult(ResultCode.SUCCESS, "增加数据成功", foodJpa.saveAndFlush(foodMenu));
         } catch (Exception e) {
             e.printStackTrace();
-            logger.warn("新增失败"+e.getMessage());
+            logger.warn("新增失败" + e.getMessage());
             return new JsonObjectResult(ResultCode.EXCEPTION, "增加数据失败");
         }
     }
@@ -136,13 +133,13 @@ public class FoodMenuController {
     }
 
     @PostMapping("/query")
-    public Object query(Object query) {
-        System.out.println(query);
-        return new JsonObjectResult();
+    public Object query(String query, @RequestParam(defaultValue = "1") int page) {
+        return new JsonObjectResult(ResultCode.SUCCESS, "", foodJpa.findByMenuWeekOfDay(Integer.parseInt(query), PageRequest.of(page - 1, 8)));
     }
 
     @PostMapping("/all")
     public Object all() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         List<Map<String, Object>> datas = new ArrayList<>();
         List<java.sql.Date> dates = foodJpa.getDate();
         for (java.sql.Date date : dates) {
@@ -153,7 +150,7 @@ public class FoodMenuController {
                 for (Map<String, Object> menu : menus) {
                     voList.add(new FoodVo(menu.get("menu_staple_food_name").toString(), Integer.parseInt(menu.get("menu_dinner").toString())));
                 }
-                data.put("foodDate", date);
+                data.put("foodDate", sdf.format(date));
                 data.put("food", voList);
                 datas.add(data);
             }

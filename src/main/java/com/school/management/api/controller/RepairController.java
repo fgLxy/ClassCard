@@ -4,7 +4,6 @@ import com.school.management.api.entity.Repair;
 import com.school.management.api.repository.RepairJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
-import com.school.management.api.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +19,8 @@ public class RepairController {
     private RepairJpaRepository jpa;
 
     @GetMapping("/list")
-    public Object list(@RequestParam(name = "page", defaultValue = "1") int page) {
-        return new JsonObjectResult(ResultCode.SUCCESS, "获取数据成功", jpa.findAll(PageRequest.of(page - 1, 8)));
+    public Object list(@RequestParam(name = "page", defaultValue = "1") int page, String classCode) {
+        return new JsonObjectResult(ResultCode.SUCCESS, "获取数据成功", jpa.findAllByClassCode(Integer.parseInt(classCode), PageRequest.of(page - 1, 8)));
     }
 
     /**
@@ -106,9 +105,9 @@ public class RepairController {
     }
 
     @PostMapping("/query")
-    public Object query(Object query) {
-        System.out.println(query);
-        return new JsonObjectResult();
+    public Object query(String classCode, String query) {
+        System.out.println(classCode + "\t:\t" + query);
+        return new JsonObjectResult(ResultCode.SUCCESS, "", jpa.findByClassCodeAndRepairDateLike(Integer.parseInt(classCode), query + "%"));
     }
 
     @PostMapping("/all")
@@ -119,12 +118,12 @@ public class RepairController {
     }
 
     @PostMapping("/allRepair")
-    public Object allRepair(){
+    public Object allRepair() {
         return new JsonObjectResult(ResultCode.SUCCESS, "", jpa.findByRepairStatus(0));
     }
 
     @GetMapping("/listComplete")
-    public Object listComplete(String classCode) {
-        return new JsonObjectResult(ResultCode.SUCCESS, "", jpa.findByRepairStatus(1));
+    public Object listComplete(String classCode, @RequestParam(defaultValue = "1") int page) {
+        return new JsonObjectResult(ResultCode.SUCCESS, "", jpa.findByRepairStatusAndClassCode(1, Integer.parseInt(classCode), PageRequest.of(page - 1, 8)));
     }
 }

@@ -1,6 +1,8 @@
 package com.school.management.api.repository;
 
 import com.school.management.api.entity.FoodMenu;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -19,6 +21,8 @@ public interface FoodMenuJpaRepository extends JpaRepository<FoodMenu, Long> {
      * @return 根据星期几来查询对应的食谱信息
      */
     List<FoodMenu> findByMenuWeekOfDay(int weekOfDay);
+
+    Page<FoodMenu> findByMenuWeekOfDay(int weekOfDay, Pageable pageable);
 
     /**
      * @param where 早  午  晚

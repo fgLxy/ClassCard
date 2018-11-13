@@ -9,6 +9,7 @@ import com.school.management.api.netty.NettyServerHandler;
 import com.school.management.api.repository.*;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
+import com.school.management.api.utils.ImgUtils;
 import com.school.management.api.vo.AddedClass;
 import com.school.management.api.vo.ClassName;
 import io.netty.buffer.Unpooled;
@@ -21,12 +22,15 @@ import org.apache.shiro.session.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -56,6 +60,9 @@ public class ClassController extends NettyServerHandler {
     private NoticeJpaRepository noticeJpa;
 
     @Autowired
+    private GradeJpaRepository gradeJpa;
+
+    @Autowired
     private RedisTemplate<String, Object> template;
 
     /**
@@ -63,9 +70,9 @@ public class ClassController extends NettyServerHandler {
      */
     @GetMapping("/listAll")
     public Object showAll(@RequestParam(name = "page", defaultValue = "1") int page, String className) {
-        List<Class> ips = null;
+        Page<Class> ips = null;
         if (className == null || className.equals("")) {
-            ips = classJpa.findAll(PageRequest.of(page - 1, 8, new Sort(Sort.Direction.ASC, "className"))).getContent();
+            ips = classJpa.findAll(PageRequest.of(page - 1, 8, new Sort(Sort.Direction.ASC, "className")));
         } else if (!className.equals("") && !className.equals("undefind")) {
             ips = classJpa.findByClassNameLike(className + "%", PageRequest.of(page - 1, 8, new Sort(Sort.Direction.ASC, "className")));
         }
@@ -92,7 +99,7 @@ public class ClassController extends NettyServerHandler {
             json.put("quantifies", 10 - classes.getQuantifies().size());
             jsons.add(json);
         }
-        return jsons;
+        return new JsonObjectResult(ResultCode.SUCCESS, ips.getTotalPages() + "", jsons);
     }
 
     /**
@@ -105,9 +112,6 @@ public class ClassController extends NettyServerHandler {
      */
     @PostMapping("/showName")
     public Object showClassName(String IP) {
-        System.out.println();
-        System.out.println(IP);
-        System.out.println();
         Class aClass;
         Gson gson = new Gson();
         ClassName name = new ClassName();
@@ -128,7 +132,13 @@ public class ClassController extends NettyServerHandler {
                     ((TreeSet<Schedule>) scheduleSet).add(schedule);
                 }
             }
-            template.opsForValue().set(String.valueOf(aClass.getClassroomCode()), gson.toJson(aClass));
+            ValueOperations<String, Object> operations = template.opsForValue();
+            Object redisDate = operations.get(String.valueOf(aClass.getClassroomCode()));
+            if (redisDate == null) {
+                operations.set(String.valueOf(aClass.getClassroomCode()), gson.toJson(aClass));
+            } else if (!redisDate.equals(gson.toJson(aClass))) {
+                operations.getAndSet(String.valueOf(aClass.getClassroomCode()), gson.toJson(aClass));
+            }
             CLASSCODE_IP.put(IP, aClass.getClassroomCode());
             IpList.add(IP);
             if (IP_SCHEDULE.containsKey(IP) && !IP_SCHEDULE.get(IP).equals(scheduleSet)) {
@@ -326,7 +336,7 @@ public class ClassController extends NettyServerHandler {
         for (Student student : students) {
             for (int i = (student.getGrades().size() - 1); i > -1; i--) {
                 Grade grade = student.getGrades().get(i);
-                if (grade.getGradeRank() < 4 && grade.getGradeRank() > 0) {
+                if (grade.getGradeRank() <= 3 && grade.getGradeRank() > 0) {
                     if ((i + 1) == student.getGrades().size()) {
                         Map<String, Object> map = new HashMap<>();
                         map.put("studentName", student.getStudentName());
@@ -358,21 +368,16 @@ public class ClassController extends NettyServerHandler {
             Class aClass = new Class();
             aClass.setClassDate(addedClass.getClassDate());
             aClass.setClassroomCode(addedClass.getClassroomCode());
-            Student student = studentJpa.findByStudentNameAndStudentClassroom(addedClass.getClassMonitor(), addedClass.getClassName());
-            if (student != null) {
-                aClass.setClassMonitor(student);
-            } else {
-                Student nullStudent = new Student();
-                nullStudent.setStudentClassroom(addedClass.getClassName());
-                nullStudent.setStudentName(addedClass.getClassMonitor());
-                nullStudent.setStudentNum((int) (Math.random() * 1000000));
-                nullStudent.setStudentCardNum(String.valueOf(Math.random() * 1000000));
-                aClass.setClassMonitor(studentJpa.save(nullStudent));
-            }
             aClass.setClassMoralEducation(addedClass.getClassMoralEducation());
             aClass.setClassName(addedClass.getClassName());
             aClass.setClassStudentTotal(addedClass.getClassStudentTotal());
+            Student student = studentJpa.findByStudentNameAndStudentClassroom(addedClass.getClassMonitor(), addedClass.getClassName());
             Teacher teacher = teacherJpa.findByTeacherName(addedClass.getClassHeadmaster());
+            if (student != null) {
+                aClass.setClassMonitor(student);
+            } else {
+                aClass.setClassMonitor(null);
+            }
             if (Integer.parseInt(addedClass.getClassScore()) <= 5) {
                 aClass.setClassScore(Integer.parseInt(addedClass.getClassScore()));
             } else {
@@ -400,17 +405,17 @@ public class ClassController extends NettyServerHandler {
         if (aClass != null) {
             aClass.setClassStudentTotal(addedClass.getClassStudentTotal());
             aClass.setClassScore(Integer.parseInt(addedClass.getClassScore()));
-            Student student = studentJpa.findByStudentNameAndStudentClassroom(addedClass.getClassMonitor(), addedClass.getClassName());
             Teacher teacher = teacherJpa.findByTeacherName(addedClass.getClassHeadmaster());
-            if (student != null) {
-                aClass.setClassMonitor(student);
-            } else {
-                return new JsonObjectResult(ResultCode.PARAMS_ERROR, "没有找到你输入的班长，请核对后重试");
-            }
+            Student student = studentJpa.findByStudentNameAndStudentClassroom(addedClass.getClassMonitor(), addedClass.getClassName());
             if (teacher != null) {
                 aClass.setClassHeadmaster(teacher);
             } else {
                 return new JsonObjectResult(ResultCode.PARAMS_ERROR, "查询不到你输入的教师，请核对后再试。");
+            }
+            if (student != null) {
+                aClass.setClassMonitor(student);
+            } else {
+                return new JsonObjectResult(ResultCode.PARAMS_ERROR, "没有找到你输入的班长，请核对后重试");
             }
             return new JsonObjectResult(ResultCode.SUCCESS, "更改数据成功", classJpa.saveAndFlush(aClass));
         } else {
@@ -499,11 +504,29 @@ public class ClassController extends NettyServerHandler {
                 name.setClassCode(clazz.getClassroomCode());
                 name.setClassName(clazz.getClassName());
                 name.setClassID(clazz.getClassId());
+                name.setClassPhoto(clazz.getClassBadge());
                 datas.add(name);
             }
             return datas;
         }
         return null;
+    }
+
+    @PostMapping("/badge")
+    public Object badge(String img, String className, String suffixName) {
+        try {
+            Class clazz = classJpa.findByClassName(className);
+            clazz.setClassBadge(ImgUtils.base64ToImg(img, clazz.getClassroomCode() + "." + suffixName, ""));
+            classJpa.save(clazz);
+            return new JsonObjectResult(ResultCode.SUCCESS, "上传成功");
+        } catch (IOException e) {
+            return new JsonObjectResult(ResultCode.EXCEPTION, e.getMessage());
+        }
+    }
+
+    @PostMapping("/showBadge")
+    public Object showBadge(String className) {
+        return new JsonObjectResult(ResultCode.SUCCESS, "", classJpa.getAllBadge(className));
     }
 
     /**
@@ -520,21 +543,6 @@ public class ClassController extends NettyServerHandler {
                 Map<String, Object> map = new HashMap<>();
                 List<Map<String, Object>> schedules = new ArrayList<>();
                 Set<Schedule> queue = ((Set<Schedule>) IP_SCHEDULE.get(ip));
-                for (Channel channel1 : NettyChannelHandlerPool.channelGroup) {
-                    System.out.println();
-                    System.out.println(channel1.remoteAddress());
-                    System.out.println();
-                    System.out.println(channel1.id());
-                    System.out.println();
-                    System.out.println(channel1.localAddress());
-                    System.out.println();
-                }
-
-                for (String key : IP_SCHEDULE.keySet()) {
-                    System.out.println();
-                    System.out.println(key + "\t:\t" + new Gson().toJson(IP_SCHEDULE.get(key)));
-                    System.out.println();
-                }
                 map.put("type", 1);
                 if (queue.size() > 0 && channel != null) {
                     int i = 0;
@@ -664,8 +672,6 @@ public class ClassController extends NettyServerHandler {
                 nettyMap.put(ip, ctx.channel().id());
             }
         }
-
-
         isEnd();
     }
 

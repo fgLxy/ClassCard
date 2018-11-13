@@ -13,7 +13,6 @@ import com.school.management.api.repository.TeacherJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
 import com.school.management.api.utils.ImgUtils;
-import org.omg.CORBA.OBJ_ADAPTER;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 @RestController
@@ -116,14 +114,13 @@ public class TeacherController {
             TeacherInfo info = teacher.getTeacherInfo();
             teacher.setTeacherInfo(null);
             teacher.setCourse(teacher.getCourse());
-            teacher.setHeadPhoto(ImgUtils.base64ToImg(teacher.getHeadPhoto(), UUID.randomUUID().toString()+".jpg", teacher.getTeacherName()));
+            teacher.setHeadPhoto(ImgUtils.base64ToImg(teacher.getHeadPhoto(), UUID.randomUUID().toString() + ".jpg", teacher.getTeacherName()));
             teacher = jpa.saveAndFlush(teacher);
             info.setTeacherId(teacher.getTeacherId());
             teacher.setTeacherInfo(infoJpa.saveAndFlush(info));
             return new JsonObjectResult(ResultCode.SUCCESS, "添加成功");
         } catch (IOException e) {
-            e.printStackTrace();
-            return new JsonObjectResult(ResultCode.PARAMS_ERROR, "添加失败");
+            return new JsonObjectResult(ResultCode.PARAMS_ERROR, "添加失败" + e.getMessage());
         }
     }
 

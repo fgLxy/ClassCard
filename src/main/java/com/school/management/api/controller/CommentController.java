@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
-import javax.management.ObjectName;
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -66,6 +65,24 @@ public class CommentController {
                     data.put("comment_time", new SimpleDateFormat("HH:mm:ss").format(date));
                 }
                 datas.add(data);
+            } else {
+                Map<String, Object> data = new HashMap<>();
+                data.put("comment_parent", student.getStudentNum());
+                data.put("student_name", student.getStudentName());
+                data.put("teacher_name", teacher.getTeacherName());
+                data.put("student_classroom", student.getStudentClassroom());
+                data.put("comment_teacher", teacher.getTeacherId());
+                data.put("comment_id", 0);
+                data.put("comment_time", "");
+                data.put("comment_status", 0);
+                data.put("comment_account", "您已经与该学生/老师建立了连接");
+                data.put("comment_type", 0);
+                data.put("comment_photo_1", "");
+                data.put("comment_photo_2", "");
+                data.put("comment_photo_3", "");
+                data.put("student_num", student.getStudentNum());
+                data.put("teacher_ID", teacher.getTeacherId());
+                datas.add(data);
             }
         }
         return new JsonObjectResult(ResultCode.SUCCESS, "", datas);
@@ -80,7 +97,6 @@ public class CommentController {
         List<Map<String, Object>> mapList = commentJpa.findAllByStudentId(student.getStudentNum());
         List<Map<String, Object>> datas = new ArrayList<>();
         if (!mapList.isEmpty()) {
-            int i = 0;
             for (Map<String, Object> data : mapList) {
                 Map<String, Object> old = new HashMap<>(data);
                 Object teacher = data.get("comment_teacher");

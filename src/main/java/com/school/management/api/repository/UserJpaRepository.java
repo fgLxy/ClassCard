@@ -2,6 +2,8 @@ package com.school.management.api.repository;
 
 import com.school.management.api.entity.Permission;
 import com.school.management.api.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -33,4 +35,6 @@ public interface UserJpaRepository extends JpaRepository<User, Long> {
     User findByUserId(long userId);
 
     List<User> findByPermission(Permission permission);
+
+    Page<User> findByPermission(Permission permission, Pageable pageable);
 }

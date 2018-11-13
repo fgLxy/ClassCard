@@ -9,7 +9,7 @@ public class GsonUtil {
 
     private static final Gson GSON = new Gson();
 
-    public static String parseObject (boolean isWarning, Object o) {
+    public static String parseObject(boolean isWarning, Object o) {
         Map<String, Object> map = new HashMap<>();
         if (isWarning) {
             map.put("state", 500);
@@ -23,7 +23,7 @@ public class GsonUtil {
         return GSON.toJson(map);
     }
 
-    public static String parseObject (Object o) {
+    public static String parseObject(Object o) {
         return parseObject(false, o);
     }
 

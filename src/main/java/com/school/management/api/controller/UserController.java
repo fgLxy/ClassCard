@@ -1,20 +1,18 @@
 package com.school.management.api.controller;
 
-import com.google.gson.Gson;
+import com.school.management.api.entity.Permission;
 import com.school.management.api.entity.User;
 import com.school.management.api.repository.PermissionJpaRepository;
 import com.school.management.api.repository.UserJpaRepository;
 import com.school.management.api.results.JsonObjectResult;
 import com.school.management.api.results.ResultCode;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/school/user")
@@ -65,7 +63,9 @@ public class UserController {
         if (Ids != null) {
             String[] repairIds = Ids.split(",");
             for (String repairId : repairIds) {
-                userJpa.delete(userJpa.findByUserId(Long.parseLong(repairId)));
+                User user = userJpa.findByUserId(Long.parseLong(repairId));
+                user.setPermission(null);
+                userJpa.delete(userJpa.save(user));
             }
             return new JsonObjectResult(ResultCode.SUCCESS, "批量删除成功");
         }
@@ -75,6 +75,8 @@ public class UserController {
     @PostMapping("/add")
     public Object add(User user) {
         user.setPermission(perJpa.getByPerId(user.getPermission().getPerId()));
+        user.setUserPassword("000000");
+        user.setAddDate(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(System.currentTimeMillis())));
         return new JsonObjectResult(ResultCode.SUCCESS, "增加数据成功", userJpa.saveAndFlush(user));
     }
 
@@ -92,9 +94,14 @@ public class UserController {
         return perJpa.findAll();
     }
 
+    @GetMapping("listPer")
+    public Object listPer() {
+        return new JsonObjectResult(ResultCode.SUCCESS, "", perJpa.findAll());
+    }
+
     @PostMapping("/query")
-    public Object query(String date) {
-        System.out.println(date);
-        return new JsonObjectResult(ResultCode.SUCCESS, "", userJpa.findByPermission(perJpa.findByPerName(date)));
+    public Object query(String date, @RequestParam(name = "page", defaultValue = "1") int page) {
+        Optional<Permission> permission = perJpa.findById(Long.parseLong(date));
+        return permission.map(permission1 -> new JsonObjectResult(ResultCode.SUCCESS, "", userJpa.findByPermission(permission1, PageRequest.of(page - 1, 8)))).orElseGet(() -> new JsonObjectResult(ResultCode.SUCCESS, "未查询到该角色"));
     }
 }

@@ -15,5 +15,8 @@ public interface QuantifyJpaRepository extends JpaRepository<Quantify, Long> {
     Page<Quantify> findByClassId(long classId, Pageable pageable);
 
     List<Quantify> findByClassCode(long classId, Sort sort);
-    Page<Quantify> findByClassCode(long classId,  Pageable pageable);
+
+    Page<Quantify> findByClassCode(long classId, Pageable pageable);
+
+    Page<Quantify> findByQuantifyDateLikeAndClassCode(String date, long classId, Pageable pageable);
 }

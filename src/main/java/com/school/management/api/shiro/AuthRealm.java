@@ -1,8 +1,7 @@
 package com.school.management.api.shiro;
 
-import com.google.gson.Gson;
-import com.school.management.api.entity.*;
 import com.school.management.api.entity.Class;
+import com.school.management.api.entity.*;
 import com.school.management.api.repository.*;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;

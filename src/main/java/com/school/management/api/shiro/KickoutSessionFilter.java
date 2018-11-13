@@ -1,14 +1,5 @@
 package com.school.management.api.shiro;
 
-import java.io.Serializable;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Iterator;
-
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-
 import com.school.management.api.entity.User;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheManager;
@@ -20,6 +11,13 @@ import org.apache.shiro.web.filter.AccessControlFilter;
 import org.apache.shiro.web.util.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import java.io.Serializable;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 public class KickoutSessionFilter extends AccessControlFilter {
     private static final Logger logger = LoggerFactory.getLogger(KickoutSessionFilter.class);
@@ -63,7 +61,7 @@ public class KickoutSessionFilter extends AccessControlFilter {
 
     @Override
     protected boolean isAccessAllowed(ServletRequest request, ServletResponse response, Object mappedValue) throws Exception {
-        while(((HttpServletRequest) request).getHeaderNames().hasMoreElements()) {
+        while (((HttpServletRequest) request).getHeaderNames().hasMoreElements()) {
             System.out.println(((HttpServletRequest) request).getHeaderNames().nextElement());
         }
         return false;
